@@ -10,7 +10,7 @@
     $user_id = $_SESSION['user_id'];
 
     // Connect to the database
-    $conn = new mysqli("localhost", "root", "", "ipt-sys-test");
+    $conn = new mysqli("localhost", "venlit", "venlit", "IPT-SYSTEM");
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }

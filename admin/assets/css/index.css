@@ -1,8 +1,8 @@
-body{
+body {
     background: mintcream;
 }
 
-.add-btn{
+.add-btn {
     float: right;
     background-color: #00442f;
     padding: 12px 20px;
@@ -13,12 +13,12 @@ body{
     display: inline-block;
 }
 
-.add-btn:hover{
+.add-btn:hover {
     color: #fff;
     text-decoration: none;
 }
 
-.section-title{
+.section-title {
     float: left;
 }
 
@@ -29,58 +29,74 @@ body{
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-h1, h2 {
+
+h1,
+h2 {
     color: #343a40;
 }
+
 .table {
     width: 100%;
     margin-top: 20px;
     border-collapse: collapse;
 }
-.table th, .table td {
+
+.table th,
+.table td {
     padding: 12px;
     text-align: left;
     border: 1px solid #dee2e6;
 }
+
 .table th {
     background-color: #343a40;
     color: #ffffff;
 }
+
 .table tbody tr:nth-child(odd) {
     background-color: #e9ecef;
 }
+
 .btn-success {
     background-color: #28a745;
     border-color: #28a745;
 }
+
 .btn-success:hover {
     background-color: #218838;
     border-color: #1e7e34;
 }
+
 .btn-danger {
     background-color: #dc3545;
     border-color: #dc3545;
 }
+
 .btn-danger:hover {
     background-color: #c82333;
     border-color: #bd2130;
 }
+
 .btn-info {
     background-color: #17a2b8;
     border-color: #17a2b8;
 }
+
 .btn-info:hover {
     background-color: #138496;
     border-color: #117a8b;
 }
+
 .text-right {
     margin-top: 20px;
     text-align: right;
 }
+
 .text-center {
     text-align: center;
 }
-.sidebar{
+
+.sidebar {
     position: fixed;
     background: #0056b3;
     width: 14%;
@@ -89,7 +105,7 @@ h1, h2 {
     top: 0;
 }
 
-.topbar{
+.topbar {
     position: fixed;
     background: #fff;
     width: 84%;
@@ -97,7 +113,7 @@ h1, h2 {
     left: 16%;
     right: 0;
     top: 0;
-    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
 }
 
 .info {
@@ -106,7 +122,7 @@ h1, h2 {
     margin-top: 100px;
 }
 
-.admin-logout{
+.admin-logout {
     float: right;
     padding: 16px 30px;
     text-decoration: none;
@@ -114,15 +130,15 @@ h1, h2 {
     font-size: 20px;
 }
 
-.info{
+.info {
     background: #f8f9fc;
-    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58, 59, 69, .15) !important;
     border-radius: 4px;
     height: 100%;
     padding-top: 10px;
 }
 
-.info .data-container{
+.info .data-container {
     background: #fff;
     padding: 20px 20px;
     height: 100%;
@@ -131,16 +147,16 @@ h1, h2 {
     padding-bottom: 100px;
 }
 
-.info h2{
+.info h2 {
     padding: 0 20px;
 }
 
-table thead th{
+table thead th {
     background: #8dabf1 !important;
     color: #fff;
 }
 
-.sidebar h3{
+.sidebar h3 {
     color: #fff;
     font-size: 30px;
     padding: 13px 0;
@@ -149,11 +165,11 @@ table thead th{
     border-bottom: 2px solid #fff1;
 }
 
-.sidebar ul{
+.sidebar ul {
     list-style: none;
 }
 
-.sidebar ul li a{
+.sidebar ul li a {
     color: #fff;
     text-decoration: none;
     margin: 10px 0;

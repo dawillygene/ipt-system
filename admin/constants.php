@@ -1,7 +1,5 @@
 <?php
-// Admin UI Constants
 class AdminUIConstants {
-    // Color Palette
     const COLORS = [
         'primary' => '#07442d',       
         'secondary' => '#206f56',      

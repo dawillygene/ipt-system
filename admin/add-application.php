@@ -1,123 +1,236 @@
 <?php
-include('db.php');
 session_start();
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 if (!isset($_SESSION['admin_id'])) {
-    header("Location: admin_login.php");
+    header('Location: admin_login.php');
     exit;
 }
 
-// Function to fetch user data by user ID
-function getUserData($userId, $con) {
-    $userDataSql = "SELECT * FROM users WHERE id = '$userId'";
-    $userDataResult = mysqli_query($con, $userDataSql);
-    return mysqli_fetch_assoc($userDataResult);
+// Check if required files exist before including them
+if (!file_exists('db.php')) {
+    die('Database configuration file not found.');
 }
 
-// If an action (approve or reject) is submitted for a request, update the request status
-if (isset($_POST['action']) && isset($_POST['request_id'])) {
-    $action = $_POST['action'];
-    $request_id = $_POST['request_id'];
-    $status = $action === 'approve' ? 'approved' : 'rejected';
-
-    $update_sql = "UPDATE user_requests SET status = '$status' WHERE id = '$request_id'";
-    mysqli_query($con, $update_sql);
+if (!file_exists('includes/layout.php')) {
+    die('Layout file not found.');
 }
 
-// Retrieve user requests from the database
-//$applications_sql = "SELECT applications.*, users.name, users.email FROM user_requests INNER JOIN users ON user_requests.user_id = users.id";
-//$applications_sql = "SELECT applications.* FROM applications INNER JOIN students ON students.user_id = students.id";
-$applications_sql = "SELECT applications.* FROM applications";
-$applications_result = mysqli_query($con, $applications_sql);
+require_once 'db.php';
+require_once 'includes/layout.php';
+
+$success_message = '';
+$error_message = '';
 
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $student_id = $_POST['student_id'] ?? '';
+    $college = $_POST['college'] ?? '';
+    $organization = $_POST['organization'] ?? '';
+    $training_area = $_POST['training_area'] ?? '';
+    $letter_date = $_POST['letter_date'] ?? '';
+    $status = $_POST['status'] ?? 'pending';
+    
+    // Validate required fields
+    if (empty($student_id) || empty($college) || empty($organization) || empty($training_area) || empty($letter_date)) {
+        $error_message = 'All fields are required.';
+    } else {
+        // Check if student exists
+        $stmt = $con->prepare("SELECT student_id FROM students WHERE student_id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            $error_message = 'Student with ID ' . htmlspecialchars($student_id) . ' does not exist.';
+        } else {
+            // Insert the application - using user_id instead of student_id since applications table references users
+            $stmt = $con->prepare("INSERT INTO applications (user_id, full_name, phone, reg_number, department, industrial, application_date, created_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
+            
+            // Get student details for the application
+            $student_stmt = $con->prepare("SELECT s.user_id, s.full_name, s.phone_number, s.reg_number, s.department FROM students s WHERE s.student_id = ?");
+            $student_stmt->bind_param("i", $student_id);
+            $student_stmt->execute();
+            $student_result = $student_stmt->get_result();
+            $student_data = $student_result->fetch_assoc();
+            
+            $stmt->bind_param("isssssss", $student_data['user_id'], $student_data['full_name'], $student_data['phone_number'], $student_data['reg_number'], $student_data['department'], $organization, $letter_date, $status);
+            
+            if ($stmt->execute()) {
+                $success_message = 'Application added successfully!';
+                // Clear form data on success
+                $student_id = $college = $organization = $training_area = $letter_date = '';
+                $status = 'pending';
+            } else {
+                $error_message = 'Error adding application: ' . $con->error;
+            }
+        }
+    }
+}
+
+$students_query = "SELECT s.student_id, s.reg_number, s.full_name 
+                   FROM students s 
+                   ORDER BY s.full_name";
+$students_result = $con->query($students_query);
+
+$breadcrumbs = [
+    ['name' => 'Dashboard', 'url' => 'admin_dashboard.php'],
+    ['name' => 'Applications', 'url' => 'admin_applications.php'],
+    ['name' => 'Add Application']
+];
+$pageTitle = 'Add Application';
+
+echo renderAdminLayout($pageTitle, $breadcrumbs);
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Add Application</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="./css/index.css" rel="stylesheet">
-</head>
-<body>
-<div class="page-container">
-    <?php include('./sidebar.php'); ?>
-
-    <div class="topbar">
-        <a href="admin_logout.php" class="admin-logout">Logout</a>
-    </div>
-
-    <div class="info">
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="mt-4 section-title">Add Applications</h2>
-                <a href="./admin_applications.php" class="add-btn">
-                    <i class="fas fa-plus fa-sm text-white-50"></i>Applications
+<div class="max-w-4xl mx-auto">
+    <?php 
+    $headerContent = '
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Add New Application</h1>
+                <p class="mt-2 text-gray-600">Create a new training application for a student</p>
+            </div>
+            <div class="mt-4 sm:mt-0">
+                <a href="admin_applications.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200 inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Applications
                 </a>
             </div>
         </div>
-        <div class="data-container">
-            <br />
-            <form action="submit_training.php" method="POST">
-                <div class="mb-3">
-                    <label for="student_id" class="form-label">Student ID</label>
-                    <input type="number" class="form-control" name="student_id" id="student_id" required>
-                </div>
+    ';
+    echo renderAdminCard('', $headerContent, '', false);
+    ?>
 
-                <div class="mb-3">
-                    <label for="college" class="form-label">College</label>
-                    <input type="text" class="form-control" name="college" id="college" required>
-                </div>
+    <?php if ($success_message): ?>
+        <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+            <i class="fas fa-check-circle mr-3 text-green-500"></i>
+            <?php echo htmlspecialchars($success_message); ?>
+        </div>
+    <?php endif; ?>
 
-                <div class="mb-3">
-                    <label for="organization" class="form-label">Organization</label>
-                    <input type="text" class="form-control" name="organization" id="organization" required>
-                </div>
+    <?php if ($error_message): ?>
+        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+            <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+            <?php echo htmlspecialchars($error_message); ?>
+        </div>
+    <?php endif; ?>
 
-                <div class="mb-3">
-                    <label for="training_area" class="form-label">Training Area</label>
-                    <input type="text" class="form-control" name="training_area" id="training_area" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="letter_date" class="form-label">Letter Date</label>
-                    <input type="date" class="form-control" name="letter_date" id="letter_date" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" name="status" id="status" required>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="bg-gradient-to-r from-admin-primary to-admin-secondary px-6 py-4">
+            <h3 class="text-lg font-semibold text-white flex items-center">
+                <i class="fas fa-plus mr-3"></i>
+                Application Details
+            </h3>
+        </div>
+        
+        <form method="POST" class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="student_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-graduate mr-2 text-admin-primary"></i>
+                        Student
+                    </label>
+                    <select name="student_id" id="student_id" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+                        <option value="">Select a student...</option>
+                        <?php while ($student = $students_result->fetch_assoc()): ?>
+                            <option value="<?php echo $student['student_id']; ?>" 
+                                    <?php echo (isset($student_id) && $student_id == $student['student_id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($student['full_name']) . ' (Reg: ' . htmlspecialchars($student['reg_number']) . ')'; ?>
+                            </option>
+                        <?php endwhile; ?>
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-success">Submit</button>
-            </form>
-        </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-flag mr-2 text-admin-primary"></i>
+                        Status
+                    </label>
+                    <select name="status" id="status" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+                        <option value="pending" <?php echo (isset($status) && $status === 'pending') ? 'selected' : ''; ?>>Pending</option>
+                        <option value="approved" <?php echo (isset($status) && $status === 'approved') ? 'selected' : ''; ?>>Approved</option>
+                        <option value="rejected" <?php echo (isset($status) && $status === 'rejected') ? 'selected' : ''; ?>>Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="college" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-university mr-2 text-admin-primary"></i>
+                    College
+                </label>
+                <input type="text" name="college" id="college" required
+                       value="<?php echo htmlspecialchars($college ?? ''); ?>"
+                       placeholder="Enter college name"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+            </div>
+
+            <div>
+                <label for="organization" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-building mr-2 text-admin-primary"></i>
+                    Organization
+                </label>
+                <input type="text" name="organization" id="organization" required
+                       value="<?php echo htmlspecialchars($organization ?? ''); ?>"
+                       placeholder="Enter training organization"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+            </div>
+
+            <div>
+                <label for="training_area" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-tools mr-2 text-admin-primary"></i>
+                    Training Area
+                </label>
+                <input type="text" name="training_area" id="training_area" required
+                       value="<?php echo htmlspecialchars($training_area ?? ''); ?>"
+                       placeholder="Enter training area/field"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+            </div>
+
+            <div>
+                <label for="letter_date" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar mr-2 text-admin-primary"></i>
+                    Application Letter Date
+                </label>
+                <input type="date" name="letter_date" id="letter_date" required
+                       value="<?php echo htmlspecialchars($letter_date ?? ''); ?>"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <button type="submit"
+                        class="bg-admin-primary text-white px-6 py-3 rounded-lg hover:bg-admin-secondary transition-colors duration-200 flex items-center justify-center font-medium">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Application
+                </button>
+                <a href="admin_applications.php"
+                   class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center font-medium">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 
-
-<!-- Arrow No Function -->
 <script>
+// Prevent back button
+window.history.forward();
+function noBack() {
     window.history.forward();
-    function noBack() {
-        window.history.forward();
-    }
-    setTimeout("noBack()", 0);
-    window.onunload = function() {null};
+}
+setTimeout("noBack()", 0);
+window.onunload = function() { null };
 
-    if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
-    }
-
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
 </script>
-<!-- End Arrow -->
 
-</body>
-</html>
+<?php echo renderAdminLayoutEnd(); ?>

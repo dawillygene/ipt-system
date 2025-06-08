@@ -57,7 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $student_result = $student_stmt->get_result();
             $student_data = $student_result->fetch_assoc();
             
-            $stmt->bind_param("isssssss", $student_data['user_id'], $student_data['full_name'], $student_data['phone_number'], $student_data['reg_number'], $student_data['department'], $organization, $letter_date, $status);
+            // Truncate phone number to exactly 10 characters
+            $phone_truncated = substr($student_data['phone_number'], 0, 10);
+            
+            $stmt->bind_param("isssssss", $student_data['user_id'], $student_data['full_name'], $phone_truncated, $student_data['reg_number'], $student_data['department'], $organization, $letter_date, $status);
             
             if ($stmt->execute()) {
                 $success_message = 'Application added successfully!';
@@ -155,7 +158,6 @@ echo renderAdminLayout($pageTitle, $breadcrumbs);
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
                         <option value="pending" <?php echo (isset($status) && $status === 'pending') ? 'selected' : ''; ?>>Pending</option>
                         <option value="approved" <?php echo (isset($status) && $status === 'approved') ? 'selected' : ''; ?>>Approved</option>
-                        <option value="rejected" <?php echo (isset($status) && $status === 'rejected') ? 'selected' : ''; ?>>Rejected</option>
                     </select>
                 </div>
             </div>

@@ -1,0 +1,297 @@
+.zanzi-flag{
+    position: absolute;
+    right: 100px;
+    top: 0;
+    height: 120px;
+    margin-top: 15px;
+}
+
+.bmz-logo{
+    position: absolute;
+    right: 100px;
+    top: 0;
+    height: 120px;
+    margin-top: 15px;
+}
+
+.jengo{
+    width: 100%;
+    border-radius: 10px;
+}
+
+.kist-logo{
+    position: absolute;
+    left: 100px;
+    top: 0;
+    height: 120px;
+    width: 170px;
+    margin-top: 15px;
+}
+
+header .intro{
+    background: #fff;
+    height: 150px;
+}
+
+.intro{
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    padding: 30px 0;
+    text-align: center;
+}
+
+.intro h1{
+    font-size: 35px;
+}
+
+.intro small{
+    font-size: 30px;
+}
+
+.nav-menu{
+    width: 100%;
+    height: 65px;
+    background: #0060B1;
+}
+
+.nav-menu-list{
+    list-style: none;
+    float: right;
+    padding: 20px 20px;
+    display: inline-block;
+    margin: 0;
+}
+
+.nav-menu-list li{
+    display: inline-block;
+}
+
+.nav-menu-list li a{
+    margin: 20px 20px;
+    font-size: 17px;
+    color: #fff;
+}
+
+.nav-menu-list li a:active{
+    color: #0060B1;
+}
+
+.line-wrapper{
+    width: 100%;
+}
+
+.section-title small{
+    background: #07442d;
+    color: #fff;
+    width: 100%;
+    padding: 14px 70px;
+    font-size: 23px;
+    margin: 0;
+    display: inline-block;
+}
+
+.section-title-01{
+    width: 100%;
+    padding: 14px 10px;
+    margin: 30px 0;
+}
+
+.section-title-01 h3{
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.search-container input{
+    border: none;
+    padding: 12px 20px;
+    border-bottom: 1px solid #ccc;
+    width: 100%;
+}
+
+#center-form{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-box{
+    width: 530px;
+    height: 100%;
+    border-radius: 10px;
+    border: 2px solid #ccc3;
+    margin: 30px 0;
+    padding: 40px 50px;
+}
+
+.form-box h2{
+    margin-bottom: 30px;
+    font-size: 25px;
+}
+
+.form-box input,
+.form-box select{
+    padding: 12px 20px;
+    border: 1px solid #ccc;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.form-box input:focus{
+    outline: none;
+}
+
+.form-box button{
+    background: #07442d;
+    padding: 12px 20px;
+    margin: 20px 0;
+    color: #fff;
+    font-size: 20px;
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.form-box button:hover{
+    color: #fff;
+}
+
+.sidebar{
+    width: 100%;
+    height: 100%;
+    padding-bottom: 30px;
+    background: #0060B1;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.sidebar .profile{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.sidebar .profile img{
+    border-radius: 100px;
+    padding: 5px 5px;
+    height: 130px;
+    width: 130px;
+    background: #fff;
+}
+
+.sidebar .menu ul{
+    list-style: none;
+    margin: 0;
+    padding: 0px 20px;
+}
+
+.sidebar .menu ul li{
+    background: #fff;
+    margin: 10px 0;
+    padding: 9px 20px;
+    border-radius: 4px;
+}
+
+.sidebar .menu ul li a{
+    color: #000;
+}
+
+.section-info{
+    margin-top: 25px;
+    margin-bottom: 30px;
+}
+
+.section-info h3{
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.user-info-detail{
+    margin-top: 20px;
+}
+
+.user-info-detail .detail-header{
+    padding: 20px 20px;
+    background: #0060B1;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.form-inside{
+    border: 1px solid #ccc;
+    padding: 15px 30px;
+    margin-bottom: 100px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.detail-header{
+    padding: 20px 20px;
+    background: #0060B1;
+    color: #fff;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.user-info-detail .detail-header h2{
+    margin-bottom: 10px;
+}
+
+.update-password-form{
+    width: 40%;
+    margin-top: 30px;
+}
+
+.update-password-form input,
+.update-password-form select{
+    padding: 12px 20px;
+    border: 1px solid #ccc;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.update-password-form input:focus{
+    outline: none;
+}
+
+.update-password-form button{
+    background: #0056b3;
+    padding: 12px 20px;
+    margin: 6px 0;
+    color: #fff;
+    width: 100%;
+}
+
+.update-password-form button:hover{
+    background: #0056b3;
+    color: #fff;
+}
+
+.submit-btn{
+    background: #0056b3;
+    padding: 12px 20px;
+    margin: 10px 0;
+    color: #fff;
+    width: 14%;
+}
+
+.submit-btn:hover{
+    background: #0056b3;
+    color: #fff;
+}
+
+footer{
+    background: #0060B1;
+    height: 60px;
+    text-align: center;
+    padding: 17px 0;
+    font-size: 18px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    color: #fff;
+}
+

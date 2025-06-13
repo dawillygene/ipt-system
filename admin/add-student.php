@@ -1,4 +1,9 @@
 <?php
+// Add error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 if (!isset($_SESSION['admin_id'])) {
@@ -6,7 +11,25 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-require_once 'db.php';
+// Test database connection with error handling
+try {
+    require_once 'db.php';
+    
+    // Test if database connection is working
+    if (!isset($con) || !$con) {
+        throw new Exception('Database connection not established');
+    }
+    
+    // Test a simple query
+    $test_query = $con->query("SELECT 1");
+    if (!$test_query) {
+        throw new Exception('Database query failed: ' . $con->error);
+    }
+    
+} catch (Exception $e) {
+    die('Database Error: ' . $e->getMessage());
+}
+
 require_once 'includes/layout.php';
 
 $success_message = '';
@@ -25,17 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($user_id) || empty($student_id) || empty($college_name) || empty($course_name) || empty($year_of_study)) {
         $error_message = 'All required fields must be filled.';
     } else {
-        // Check if user exists and is not already a student
-        $stmt = $con->prepare("SELECT id FROM users WHERE id = ? AND role = 'student'");
+        // Check if user exists
+        $stmt = $con->prepare("SELECT id, name FROM users WHERE id = ?");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows === 0) {
-            $error_message = 'Selected user does not exist or is not a student.';
+            $error_message = 'Selected user does not exist.';
         } else {
+            $user_data = $result->fetch_assoc();
+            
             // Check if student profile already exists for this user
-            $stmt = $con->prepare("SELECT id FROM students WHERE user_id = ?");
+            $stmt = $con->prepare("SELECT student_id FROM students WHERE user_id = ?");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -43,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($result->num_rows > 0) {
                 $error_message = 'Student profile already exists for this user.';
             } else {
-                // Check if student ID is unique
-                $stmt = $con->prepare("SELECT id FROM students WHERE student_id = ?");
+                // Check if student ID/reg_number is unique
+                $stmt = $con->prepare("SELECT student_id FROM students WHERE reg_number = ?");
                 $stmt->bind_param("s", $student_id);
                 $stmt->execute();
                 $result = $stmt->get_result();
@@ -52,9 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($result->num_rows > 0) {
                     $error_message = 'Student ID already exists. Please use a unique student ID.';
                 } else {
-                    // Insert the student profile
-                    $stmt = $con->prepare("INSERT INTO students (user_id, student_id, college_name, course_name, year_of_study, phone_number, address, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-                    $stmt->bind_param("issssss", $user_id, $student_id, $college_name, $course_name, $year_of_study, $phone_number, $address);
+                    // Convert year of study to number
+                    $year_number = (int) filter_var($year_of_study, FILTER_SANITIZE_NUMBER_INT);
+                    
+                    // Insert the student profile with the correct table structure
+                    $stmt = $con->prepare("INSERT INTO students (user_id, full_name, reg_number, gender, college_name, department, course_name, program, level, year_of_study, phone_number, address, email, created_at) VALUES (?, ?, ?, 'Other', ?, ?, ?, ?, '6', ?, ?, ?, NULL, NOW())");
+                    $stmt->bind_param("isssssssss", $user_id, $user_data['name'], $student_id, $college_name, $course_name, $course_name, $course_name, $year_number, $phone_number, $address);
                     
                     if ($stmt->execute()) {
                         $success_message = 'Student profile added successfully!';
@@ -69,11 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-
+// Get users who don't have student profiles yet
 $users_query = "SELECT u.id, u.name, u.email 
                 FROM users u 
                 LEFT JOIN students s ON u.id = s.user_id 
-                WHERE u.role = 'student' AND s.id IS NULL 
+                WHERE s.student_id IS NULL 
                 ORDER BY u.name";
 $users_result = $con->query($users_query);
 

@@ -72,7 +72,7 @@
                     </div>
                     <div class="form-group">
                         <label for="phone">Phone Number:</label>
-                        <input type="tel" class="form-control" name="phone" id="phone" required>
+                        <input type="text" class="form-control" name="phone" id="phone" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
                     </div>
                     <div class="form-group">
                         <label for="email">Email Address:</label>

@@ -188,9 +188,9 @@ echo renderAdminLayout($pageTitle, $breadcrumbs);
                         <i class="fas fa-phone mr-2 text-admin-primary"></i>
                         Phone Number
                     </label>
-                    <input type="tel" name="phone" id="phone"
+                    <input type="text" name="phone" id="phone"
                            value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
-                           placeholder="Enter phone number"
+                           placeholder="Enter phone number starting with +255 (e.g., +255753225961)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200">
                 </div>
             </div>
@@ -276,9 +276,11 @@ if (window.history.replaceState) {
 
 // Form validation
 document.getElementById('phone').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 10) {
-        value = value.slice(0, 10);
+    // Allow digits, spaces, hyphens, parentheses, and plus sign for international format
+    let value = e.target.value.replace(/[^0-9\s\-\(\)\+]/g, '');
+    // Limit to reasonable phone number length (15 digits max for international)
+    if (value.replace(/[^0-9]/g, '').length > 15) {
+        value = value.slice(0, -1);
     }
     e.target.value = value;
 });

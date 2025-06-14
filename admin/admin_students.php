@@ -486,7 +486,7 @@ while ($row = mysqli_fetch_assoc($users_result)) {
                     </div>
                     <div class="mb-4">
                         <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-admin-primary" name="phone_number" required>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-admin-primary" name="phone_number" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
                     </div>
                 </div>
 
@@ -582,7 +582,7 @@ while ($row = mysqli_fetch_assoc($users_result)) {
                     </div>
                     <div class="mb-4">
                         <label for="edit_phone_number" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-admin-primary" name="phone_number" id="edit_phone_number" required>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-admin-primary" name="phone_number" id="edit_phone_number" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
                     </div>
                 </div>
 

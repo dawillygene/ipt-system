@@ -13,6 +13,12 @@ $student_name = $_SESSION['student_name'] ?? 'Student';
 $success = '';
 $errors = [];
 
+// Check for session-based success message
+if (isset($_SESSION['success_message'])) {
+    $success = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
 // Create reports table if it doesn't exist
 $con->query("CREATE TABLE IF NOT EXISTS student_reports (
     report_id INT(11) AUTO_INCREMENT PRIMARY KEY,
@@ -50,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $activities_completed = trim($_POST['activities_completed'] ?? '');
         $skills_acquired = trim($_POST['skills_acquired'] ?? '');
         $challenges_faced = trim($_POST['challenges_faced'] ?? '');
-        $submit_status = $_POST['submit_status'] ?? 'draft';
+        $submit_status = 'submitted'; // Always submit, no draft functionality
         
         // Validation
         if (empty($report_title)) $errors[] = 'Report title is required';
@@ -117,34 +123,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $con->prepare("UPDATE student_reports SET 
                     report_type = ?, report_title = ?, report_content = ?, report_date = ?, 
                     week_number = ?, month_number = ?, activities_completed = ?, 
-                    skills_acquired = ?, challenges_faced = ?, status = ?, 
+                    skills_acquired = ?, challenges_faced = ?, status = 'submitted', 
                     attachment_path = COALESCE(?, attachment_path),
-                    submitted_at = CASE WHEN ? = 'submitted' THEN CURRENT_TIMESTAMP ELSE submitted_at END,
+                    submitted_at = CURRENT_TIMESTAMP,
                     updated_at = CURRENT_TIMESTAMP
                     WHERE report_id = ? AND student_id = ?");
-                $stmt->bind_param("ssssiiasssiisii", $report_type, $report_title, $report_content, 
+                $stmt->bind_param("ssssiiisssii", $report_type, $report_title, $report_content, 
                     $report_date, $week_number, $month_number, $activities_completed, 
-                    $skills_acquired, $challenges_faced, $submit_status, $attachment_path, 
-                    $submit_status, $report_id, $student_id);
+                    $skills_acquired, $challenges_faced, $attachment_path, 
+                    $report_id, $student_id);
             } else {
                 // Insert new report
                 $stmt = $con->prepare("INSERT INTO student_reports 
                     (student_id, report_type, report_title, report_content, report_date, 
                      week_number, month_number, activities_completed, skills_acquired, 
                      challenges_faced, status, attachment_path, submitted_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                            CASE WHEN ? = 'submitted' THEN CURRENT_TIMESTAMP ELSE NULL END)");
-                $stmt->bind_param("issssiissssss", $student_id, $report_type, $report_title, 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'submitted', ?, CURRENT_TIMESTAMP)");
+                $stmt->bind_param("issssiissss", $student_id, $report_type, $report_title, 
                     $report_content, $report_date, $week_number, $month_number, 
                     $activities_completed, $skills_acquired, $challenges_faced, 
-                    $submit_status, $attachment_path, $submit_status);
+                    $attachment_path);
             }
             
             if ($stmt->execute()) {
-                $success = $submit_status === 'submitted' ? 'Report submitted successfully!' : 'Report saved as draft!';
+                $success = 'Report submitted successfully!';
                 if ($report_id === 0) {
                     $report_id = $con->insert_id;
                 }
+                $stmt->close();
+                
+                // Redirect to prevent form resubmission and show success message
+                $_SESSION['success_message'] = $success;
+                header('Location: student_reports.php?tab=history');
+                exit;
             } else {
                 $errors[] = 'Failed to save report. Please try again.';
             }
@@ -158,7 +169,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $con->prepare("DELETE FROM student_reports WHERE report_id = ? AND student_id = ?");
             $stmt->bind_param("ii", $report_id, $student_id);
             if ($stmt->execute()) {
-                $success = 'Report deleted successfully!';
+                $_SESSION['success_message'] = 'Report deleted successfully!';
+                header('Location: student_reports.php?tab=history');
+                exit;
             } else {
                 $errors[] = 'Failed to delete report.';
             }
@@ -374,12 +387,8 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Submit Buttons -->
+                    <!-- Submit Button -->
                     <div class="flex flex-col sm:flex-row gap-4 pt-6">
-                        <button type="submit" name="submit_status" value="draft" 
-                                class="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
-                            <i class="fas fa-save mr-2"></i>Save as Draft
-                        </button>
                         <button type="submit" name="submit_status" value="submitted"
                                 class="px-6 py-3 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
                             <i class="fas fa-paper-plane mr-2"></i>Submit Report
@@ -427,15 +436,13 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                                         <a href="?edit=<?php echo $report['report_id']; ?>" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
                                             <i class="fas fa-edit mr-1"></i>Edit
                                         </a>
-                                        <?php if ($report['status'] === 'draft'): ?>
-                                            <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
-                                                <input type="hidden" name="action" value="delete_report">
-                                                <input type="hidden" name="report_id" value="<?php echo $report['report_id']; ?>">
-                                                <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
-                                                    <i class="fas fa-trash mr-1"></i>Delete
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
+                                        <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this report?');">
+                                            <input type="hidden" name="action" value="delete_report">
+                                            <input type="hidden" name="report_id" value="<?php echo $report['report_id']; ?>">
+                                            <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                                                <i class="fas fa-trash mr-1"></i>Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                                 
@@ -486,30 +493,41 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
             const tabLinks = document.querySelectorAll('.tab-link');
             const tabContents = document.querySelectorAll('.tab-content');
             
+            // Check URL parameters for default tab
+            const urlParams = new URLSearchParams(window.location.search);
+            const defaultTab = urlParams.get('tab') || 'create';
+            
+            // Initialize tabs
+            function showTab(tabName) {
+                // Remove active classes from all tabs
+                tabLinks.forEach(l => {
+                    l.classList.remove('border-primary', 'text-primary');
+                    l.classList.add('border-transparent', 'text-gray-500');
+                });
+                
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Add active classes to selected tab
+                const activeLink = document.getElementById('tab-' + tabName);
+                const activeContent = document.getElementById('content-' + tabName);
+                
+                if (activeLink && activeContent) {
+                    activeLink.classList.remove('border-transparent', 'text-gray-500');
+                    activeLink.classList.add('border-primary', 'text-primary');
+                    activeContent.classList.remove('hidden');
+                }
+            }
+            
+            // Show default tab
+            showTab(defaultTab);
+            
             tabLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
-                    // Remove active classes
-                    tabLinks.forEach(l => {
-                        l.classList.remove('border-primary', 'text-primary');
-                        l.classList.add('border-transparent', 'text-gray-500');
-                    });
-                    
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    
-                    // Add active classes
-                    this.classList.remove('border-transparent', 'text-gray-500');
-                    this.classList.add('border-primary', 'text-primary');
-                    
-                    // Show corresponding content
                     const targetId = this.getAttribute('href').substring(1);
-                    const targetContent = document.getElementById('content-' + targetId);
-                    if (targetContent) {
-                        targetContent.classList.remove('hidden');
-                    }
+                    showTab(targetId);
                 });
             });
             
@@ -531,41 +549,37 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
             const reportForm = document.querySelector('form[method="POST"]');
             if (reportForm) {
                 reportForm.addEventListener('submit', function(e) {
-                    const submitStatus = e.submitter ? e.submitter.value : 'draft';
+                    // Validate all required fields
+                    const requiredFields = [
+                        { field: 'report_title', name: 'Report Title' },
+                        { field: 'report_content', name: 'Report Content' },
+                        { field: 'report_date', name: 'Report Date' },
+                        { field: 'activities_completed', name: 'Activities Completed' }
+                    ];
                     
-                    // Only validate for submitted reports, not drafts
-                    if (submitStatus === 'submitted') {
-                        const requiredFields = [
-                            { field: 'report_title', name: 'Report Title' },
-                            { field: 'report_content', name: 'Report Content' },
-                            { field: 'report_date', name: 'Report Date' },
-                            { field: 'activities_completed', name: 'Activities Completed' }
-                        ];
-                        
-                        const errors = [];
-                        
-                        requiredFields.forEach(({ field, name }) => {
-                            const element = document.querySelector(`[name="${field}"]`);
-                            if (!element || !element.value.trim()) {
-                                errors.push(name + ' is required');
-                            }
-                        });
-                        
-                        if (errors.length > 0) {
-                            e.preventDefault();
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Validation Error',
-                                html: '• ' + errors.join('<br>• '),
-                                confirmButtonColor: '#dc2626'
-                            });
-                            return false;
+                    const errors = [];
+                    
+                    requiredFields.forEach(({ field, name }) => {
+                        const element = document.querySelector(`[name="${field}"]`);
+                        if (!element || !element.value.trim()) {
+                            errors.push(name + ' is required');
                         }
+                    });
+                    
+                    if (errors.length > 0) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: '• ' + errors.join('<br>• '),
+                            confirmButtonColor: '#dc2626'
+                        });
+                        return false;
                     }
                     
                     // Show loading for form submission
                     Swal.fire({
-                        title: submitStatus === 'submitted' ? 'Submitting Report...' : 'Saving Draft...',
+                        title: 'Submitting Report...',
                         text: 'Please wait',
                         allowOutsideClick: false,
                         didOpen: () => {

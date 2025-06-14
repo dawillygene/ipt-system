@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" id="address" name="address" required>
             
             <label for="phone">Phone Number:</label>
-            <input type="text" id="phone" name="phone" required>
+            <input type="text" id="phone" name="phone" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
             
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>

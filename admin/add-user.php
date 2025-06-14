@@ -174,7 +174,7 @@ $applications_result = mysqli_query($con, $applications_sql);
                                                        name="phone" 
                                                        id="phone"
                                                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-admin-primary focus:border-admin-primary transition-colors duration-200" 
-                                                       placeholder="Enter phone number">
+                                                       placeholder="Enter phone number starting with +255 (e.g., +255753225961)">
                                             </div>
                                         </div>
                                     </div>

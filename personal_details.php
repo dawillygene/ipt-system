@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="invalid-feedback">
                                 Please enter your phone number.
                             </div>
-                            <input type="text" class="form-control" id="phone" name="phone" required>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
 
                         </div>
                         <div class="form-group">

@@ -156,7 +156,7 @@ include('db.php');
             <p class="help-block"></p>
           </div                    <div class="control-group form-group">
                         <label class="contact-p1">Phone Number:</label>
-                        <input type="tel" class="form-control" name="phone" id="phone" required>
+                        <input type="text" class="form-control" name="phone" id="phone" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
                         <p class="help-block"></p>
                     </div>
                     <div class="control-group form-group">

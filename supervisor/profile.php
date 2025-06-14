@@ -184,8 +184,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             <div>
                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" id="phone" name="phone"
+                                <input type="text" id="phone" name="phone"
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supervisor-primary focus:border-transparent"
+                                       placeholder="Enter phone number starting with +255 (e.g., +255753225961)"
                                        value="<?php echo htmlspecialchars($supervisor['phone_number'] ?? ''); ?>">
                             </div>
 

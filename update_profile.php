@@ -191,7 +191,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div class="mb-3">
                             <label for="phone_number" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" name="phone_number" id="phone_number" required>
+                            <input type="text" class="form-control" name="phone_number" id="phone_number" placeholder="Enter phone number starting with +255 (e.g., +255753225961)" required>
                         </div>
 
                         <div class="mb-3">

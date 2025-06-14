@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Check if email already exists
     if (empty($errors)) {
-        $stmt = $con->prepare("SELECT supervisor_id FROM supervisors WHERE email = ?");
+        $stmt = $con->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         if ($stmt->get_result()->num_rows > 0) {
@@ -51,17 +51,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
-        $stmt = $con->prepare("INSERT INTO supervisors (supervisor_name, email, password, phone_number, department, institution, specialization, years_experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssi", $supervisor_name, $email, $hashed_password, $phone_number, $department, $institution, $specialization, $years_experience);
+        // Start transaction
+        $con->autocommit(FALSE);
         
-        if ($stmt->execute()) {
+        try {
+            // Insert into users table
+            $stmt = $con->prepare("INSERT INTO users (name, email, password, phone, role, status) VALUES (?, ?, ?, ?, 'Supervisor', 'active')");
+            $stmt->bind_param("ssss", $supervisor_name, $email, $hashed_password, $phone_number);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create user account');
+            }
+            
+            $user_id = $con->insert_id;
+            $stmt->close();
+            
+            // Insert into supervisors table
+            $stmt = $con->prepare("INSERT INTO supervisors (user_id, department, contact_info) VALUES (?, ?, ?)");
+            $contact_info = $department . ' | ' . $phone_number;
+            $stmt->bind_param("iss", $user_id, $department, $contact_info);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to create supervisor profile');
+            }
+            
+            $stmt->close();
+            
+            // Commit transaction
+            $con->commit();
+            $con->autocommit(TRUE);
+            
             $success = 'Registration successful! You can now login to your account.';
             // Clear form data on success
             $_POST = [];
-        } else {
+            
+        } catch (Exception $e) {
+            // Rollback transaction
+            $con->rollback();
+            $con->autocommit(TRUE);
             $errors[] = 'Registration failed. Please try again.';
         }
-        $stmt->close();
     }
 }
 ?>

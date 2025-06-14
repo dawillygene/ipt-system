@@ -60,25 +60,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle file upload
         $attachment_path = NULL;
-        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/reports/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
-            $file_extension = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
-            $allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
-            
-            if (in_array($file_extension, $allowed_extensions)) {
-                $filename = 'report_' . $student_id . '_' . time() . '.' . $file_extension;
-                $attachment_path = $upload_dir . $filename;
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = __DIR__ . '/uploads/reports/';
+                if (!is_dir($upload_dir)) {
+                    if (!mkdir($upload_dir, 0755, true)) {
+                        $errors[] = 'Failed to create upload directory. Please contact administrator.';
+                    }
+                }
                 
-                if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $attachment_path)) {
-                    $errors[] = 'Failed to upload attachment';
-                    $attachment_path = NULL;
+                if (empty($errors)) {
+                    $file_extension = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+                    $allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+                    
+                    if (in_array($file_extension, $allowed_extensions)) {
+                        // Check file size (5MB limit)
+                        if ($_FILES['attachment']['size'] <= 5 * 1024 * 1024) {
+                            $filename = 'report_' . $student_id . '_' . time() . '.' . $file_extension;
+                            $attachment_path = 'uploads/reports/' . $filename; // Relative path for database
+                            $full_path = $upload_dir . $filename; // Full path for file operations
+                            
+                            if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $full_path)) {
+                                $errors[] = 'Failed to upload attachment. Please check file permissions.';
+                                $attachment_path = NULL;
+                            }
+                        } else {
+                            $errors[] = 'File size too large. Maximum allowed size is 5MB.';
+                        }
+                    } else {
+                        $errors[] = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, JPEG, PNG';
+                    }
                 }
             } else {
-                $errors[] = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, JPEG, PNG';
+                // Handle other upload errors
+                switch ($_FILES['attachment']['error']) {
+                    case UPLOAD_ERR_INI_SIZE:
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $errors[] = 'File size exceeds the maximum allowed limit.';
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                        $errors[] = 'File upload was interrupted. Please try again.';
+                        break;
+                    default:
+                        $errors[] = 'File upload failed. Please try again.';
+                        break;
+                }
             }
         }
         
@@ -167,6 +193,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Reports - IPT System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -469,6 +496,25 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     </div>
 
     <script>
+        // SweetAlert notifications
+        <?php if (!empty($errors)): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fix the following errors:',
+                html: '<?php echo "• " . implode("<br>• ", array_map(function($error) { return htmlspecialchars($error, ENT_QUOTES, "UTF-8"); }, $errors)); ?>',
+                confirmButtonColor: '#dc2626'
+            });
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '<?php echo addslashes(htmlspecialchars($success, ENT_QUOTES, "UTF-8")); ?>',
+                confirmButtonColor: '#07442d'
+            });
+        <?php endif; ?>
+
         // Tab functionality
         document.addEventListener('DOMContentLoaded', function() {
             const tabLinks = document.querySelectorAll('.tab-link');

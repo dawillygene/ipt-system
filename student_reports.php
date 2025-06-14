@@ -60,25 +60,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Handle file upload
         $attachment_path = NULL;
-        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/reports/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
-            $file_extension = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
-            $allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
-            
-            if (in_array($file_extension, $allowed_extensions)) {
-                $filename = 'report_' . $student_id . '_' . time() . '.' . $file_extension;
-                $attachment_path = $upload_dir . $filename;
+        if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+                $upload_dir = __DIR__ . '/uploads/reports/';
+                if (!is_dir($upload_dir)) {
+                    if (!mkdir($upload_dir, 0755, true)) {
+                        $errors[] = 'Failed to create upload directory. Please contact administrator.';
+                    }
+                }
                 
-                if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $attachment_path)) {
-                    $errors[] = 'Failed to upload attachment';
-                    $attachment_path = NULL;
+                if (empty($errors)) {
+                    $file_extension = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
+                    $allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+                    
+                    if (in_array($file_extension, $allowed_extensions)) {
+                        // Check file size (5MB limit)
+                        if ($_FILES['attachment']['size'] <= 5 * 1024 * 1024) {
+                            $filename = 'report_' . $student_id . '_' . time() . '.' . $file_extension;
+                            $attachment_path = 'uploads/reports/' . $filename; // Relative path for database
+                            $full_path = $upload_dir . $filename; // Full path for file operations
+                            
+                            if (!move_uploaded_file($_FILES['attachment']['tmp_name'], $full_path)) {
+                                $errors[] = 'Failed to upload attachment. Please check file permissions.';
+                                $attachment_path = NULL;
+                            }
+                        } else {
+                            $errors[] = 'File size too large. Maximum allowed size is 5MB.';
+                        }
+                    } else {
+                        $errors[] = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, JPEG, PNG';
+                    }
                 }
             } else {
-                $errors[] = 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, JPEG, PNG';
+                // Handle other upload errors
+                switch ($_FILES['attachment']['error']) {
+                    case UPLOAD_ERR_INI_SIZE:
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $errors[] = 'File size exceeds the maximum allowed limit.';
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                        $errors[] = 'File upload was interrupted. Please try again.';
+                        break;
+                    default:
+                        $errors[] = 'File upload failed. Please try again.';
+                        break;
+                }
             }
         }
         
@@ -96,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     submitted_at = CASE WHEN ? = 'submitted' THEN CURRENT_TIMESTAMP ELSE submitted_at END,
                     updated_at = CURRENT_TIMESTAMP
                     WHERE report_id = ? AND student_id = ?");
-                $stmt->bind_param("ssssiisssssii", $report_type, $report_title, $report_content, 
+                $stmt->bind_param("ssssiiasssiisii", $report_type, $report_title, $report_content, 
                     $report_date, $week_number, $month_number, $activities_completed, 
                     $skills_acquired, $challenges_faced, $submit_status, $attachment_path, 
                     $submit_status, $report_id, $student_id);
@@ -167,6 +193,7 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Reports - IPT System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -223,40 +250,6 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
                 </a>
             </nav>
         </div>
-
-        <!-- Error/Success Messages -->
-        <?php if (!empty($errors)): ?>
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-red-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <ul class="list-disc pl-5 space-y-1">
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?php echo htmlspecialchars($error); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($success): ?>
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-green-800"><?php echo htmlspecialchars($success); ?></p>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <!-- Create Report Tab -->
         <div id="content-create" class="tab-content">
@@ -469,6 +462,25 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     </div>
 
     <script>
+        // SweetAlert notifications
+        <?php if (!empty($errors)): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Please fix the following errors:',
+                html: '<?php echo "• " . implode("<br>• ", array_map(function($error) { return htmlspecialchars($error, ENT_QUOTES, "UTF-8"); }, $errors)); ?>',
+                confirmButtonColor: '#dc2626'
+            });
+        <?php endif; ?>
+
+        <?php if ($success): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '<?php echo addslashes(htmlspecialchars($success, ENT_QUOTES, "UTF-8")); ?>',
+                confirmButtonColor: '#07442d'
+            });
+        <?php endif; ?>
+
         // Tab functionality
         document.addEventListener('DOMContentLoaded', function() {
             const tabLinks = document.querySelectorAll('.tab-link');
@@ -514,6 +526,54 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
             
             reportType.addEventListener('change', handleReportTypeChange);
             handleReportTypeChange(); // Initial setup
+            
+            // Form validation
+            const reportForm = document.querySelector('form[method="POST"]');
+            if (reportForm) {
+                reportForm.addEventListener('submit', function(e) {
+                    const submitStatus = e.submitter ? e.submitter.value : 'draft';
+                    
+                    // Only validate for submitted reports, not drafts
+                    if (submitStatus === 'submitted') {
+                        const requiredFields = [
+                            { field: 'report_title', name: 'Report Title' },
+                            { field: 'report_content', name: 'Report Content' },
+                            { field: 'report_date', name: 'Report Date' },
+                            { field: 'activities_completed', name: 'Activities Completed' }
+                        ];
+                        
+                        const errors = [];
+                        
+                        requiredFields.forEach(({ field, name }) => {
+                            const element = document.querySelector(`[name="${field}"]`);
+                            if (!element || !element.value.trim()) {
+                                errors.push(name + ' is required');
+                            }
+                        });
+                        
+                        if (errors.length > 0) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validation Error',
+                                html: '• ' + errors.join('<br>• '),
+                                confirmButtonColor: '#dc2626'
+                            });
+                            return false;
+                        }
+                    }
+                    
+                    // Show loading for form submission
+                    Swal.fire({
+                        title: submitStatus === 'submitted' ? 'Submitting Report...' : 'Saving Draft...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>

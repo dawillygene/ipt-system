@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 14, 2025 at 01:07 PM
+-- Generation Time: Jun 14, 2025 at 09:15 PM
 -- Server version: 10.11.11-MariaDB-0+deb12u1
 -- PHP Version: 8.2.28
 
@@ -515,20 +515,25 @@ CREATE TABLE `students` (
   `email` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `profile_photo` varchar(255) DEFAULT NULL
+  `profile_photo` varchar(255) DEFAULT NULL,
+  `academic_transcript` varchar(500) DEFAULT NULL,
+  `id_document` varchar(500) DEFAULT NULL,
+  `cv_document` varchar(500) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`student_id`, `user_id`, `full_name`, `reg_number`, `gender`, `college_name`, `department`, `course_name`, `program`, `level`, `year_of_study`, `phone_number`, `address`, `email`, `created_at`, `updated_at`, `profile_photo`) VALUES
-(1, 24, 'Lulu Ibrahim', 'XYZ123456', 'Female', 'KIST', 'ICT', 'ICT', 'IT', '6', 4, '0623641759', '73201', 'hamis2r@gmail.com', '2025-06-06 13:25:50', '2025-06-13 18:50:48', 'uploads/profiles/1749217082_Aisha_approvedPhoto_resized.jpg'),
-(2, NULL, 'Raya Boyle', '123433322008', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'kifyqegixe@mailinator.com', '2025-06-13 18:51:45', '2025-06-13 18:51:45', NULL),
-(3, NULL, 'Felicia Mcbride', 'Ea ab esse ut venia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'gunem@mailinator.com', '2025-06-13 18:51:54', '2025-06-13 18:51:54', NULL),
-(4, NULL, 'ELIA WILLIAM MARIKI', 'T22-03-13063', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dawillygene@gmail.com', '2025-06-13 18:59:15', '2025-06-13 18:59:15', NULL),
-(5, NULL, 'Test Student', 'TEST123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test@example.com', '2025-06-13 19:02:12', '2025-06-13 19:02:12', NULL),
-(6, NULL, 'Test Profile User', 'PROFILE123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'testprofile@example.com', '2025-06-13 19:47:15', '2025-06-13 19:47:15', NULL);
+INSERT INTO `students` (`student_id`, `user_id`, `full_name`, `reg_number`, `gender`, `college_name`, `department`, `course_name`, `program`, `level`, `year_of_study`, `phone_number`, `address`, `email`, `created_at`, `updated_at`, `profile_photo`, `academic_transcript`, `id_document`, `cv_document`) VALUES
+(1, 24, 'Lulu Ibrahim', 'XYZ123456', 'Female', 'KIST', 'ICT', 'ICT', 'IT', '6', 4, '0623641759', '73201', 'hamis2r@gmail.com', '2025-06-06 13:25:50', '2025-06-13 18:50:48', 'uploads/profiles/1749217082_Aisha_approvedPhoto_resized.jpg', NULL, NULL, NULL),
+(2, NULL, 'Raya Boyle', '123433322008', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'kifyqegixe@mailinator.com', '2025-06-13 18:51:45', '2025-06-13 18:51:45', NULL, NULL, NULL, NULL),
+(3, NULL, 'Felicia Mcbride', 'Ea ab esse ut venia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'gunem@mailinator.com', '2025-06-13 18:51:54', '2025-06-13 18:51:54', NULL, NULL, NULL, NULL),
+(4, NULL, 'ELIA WILLIAM MARIKI', 'T22-03-13063', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dawillygene@gmail.com', '2025-06-13 18:59:15', '2025-06-13 18:59:15', NULL, NULL, NULL, NULL),
+(5, NULL, 'Test Student', 'TEST123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test@example.com', '2025-06-13 19:02:12', '2025-06-13 19:02:12', NULL, NULL, NULL, NULL),
+(6, NULL, 'Test Profile User', 'PROFILE123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'testprofile@example.com', '2025-06-13 19:47:15', '2025-06-13 19:47:15', NULL, NULL, NULL, NULL),
+(7, NULL, 'HEAVENLIGHT MARIKI', 'venli1221', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'venlit@gmail.com', '2025-06-14 13:45:57', '2025-06-14 13:45:57', NULL, NULL, NULL, NULL),
+(8, NULL, 'HEAVENLIGHT ELIA MARIKI', 'student123', 'Female', 'DODOMA UNIVERSITY', 'Computer Science', 'SOFTWARE ENGINEEERING', 'Bachelor', 'LEVEL 7', 4, '255753225961', 'DODOMA TANZANIA', 'student@student.com', '2025-06-14 13:50:20', '2025-06-14 20:45:41', 'uploads/students/profile_8_1749933941.png', 'uploads/students/transcript_8_1749933900.pdf', 'uploads/students/id_8_1749933931.pdf', 'uploads/students/cv_8_1749933931.pdf');
 
 -- --------------------------------------------------------
 
@@ -554,7 +559,9 @@ INSERT INTO `students_auth` (`auth_id`, `student_id`, `email`, `password`, `crea
 (2, 3, 'gunem@mailinator.com', '$2y$10$oOE7od38EciFZtgCYqckGuUx347dvXMlxK6vefr7SPmkPkbRKJDai', '2025-06-13 18:51:54', '2025-06-13 18:51:54'),
 (3, 4, 'dawillygene@gmail.com', '$2y$10$qi9XgB6d0XIG2OxNuxI2Dukta6NUIykvPkkdeStMZH1Ho8berLdiO', '2025-06-13 18:59:15', '2025-06-13 18:59:15'),
 (4, 5, 'test@example.com', '$2y$10$uILBi1Z0u97p004bmxFeZOF3Plgqe0T0BSHkluNzDG8Bl9NQ0Z8Wm', '2025-06-13 19:02:12', '2025-06-13 19:02:12'),
-(5, 6, 'testprofile@example.com', '$2y$10$b7H/EEio6FnmNsqiqmEtDuwd2f6dMN0cT6LYxgJXA9RCp/u5Hx1pi', '2025-06-13 19:47:15', '2025-06-13 19:47:15');
+(5, 6, 'testprofile@example.com', '$2y$10$b7H/EEio6FnmNsqiqmEtDuwd2f6dMN0cT6LYxgJXA9RCp/u5Hx1pi', '2025-06-13 19:47:15', '2025-06-13 19:47:15'),
+(6, 7, 'venlit@gmail.com', '$2y$10$8YFdtUscDRjqF8yn.M5bCOzfINOhS.NMiXQqpWuFdAJfostvm.hV.', '2025-06-14 13:45:57', '2025-06-14 13:45:57'),
+(7, 8, 'student@student.com', '$2y$10$zOCsy6EqGgrDhyHzEUBvGOnJ4Caiey9Q2MYiwHtqNqXef3HqZAUC6', '2025-06-14 13:50:20', '2025-06-14 13:50:20');
 
 -- --------------------------------------------------------
 
@@ -673,6 +680,17 @@ CREATE TABLE `student_reports` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `student_reports`
+--
+
+INSERT INTO `student_reports` (`report_id`, `student_id`, `report_type`, `report_title`, `report_content`, `report_date`, `week_number`, `month_number`, `activities_completed`, `skills_acquired`, `challenges_faced`, `supervisor_comments`, `status`, `attachment_path`, `submitted_at`, `created_at`, `updated_at`) VALUES
+(3, 8, 'daily', 'history of compay', 'none', '2025-06-14', NULL, NULL, '0', 'devops', 'none', NULL, 'submitted', 'uploads/reports/report_8_1749930018.pdf', '2025-06-14 19:40:18', '2025-06-14 14:40:31', '2025-06-14 19:40:18'),
+(4, 8, 'daily', 'CHECK THE APPOINTMENT', 'okay its good actually', '2025-06-14', NULL, NULL, 'it shows the all appointments', 'nothing i gained', 'no challenges', NULL, 'submitted', 'uploads/reports/report_8_1749916557.png', '2025-06-14 15:55:57', '2025-06-14 15:55:57', '2025-06-14 15:55:57'),
+(5, 8, 'daily', 'http://localhost/ipt-system/student_reports.php', 'http://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.php', '2025-06-14', NULL, NULL, 'http://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.php', 'http://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.php', 'http://localhost/ipt-system/student_reports.phphttp://localhost/ipt-system/student_reports.php', NULL, 'submitted', 'uploads/reports/report_8_1749928386.png', '2025-06-14 19:13:06', '2025-06-14 19:13:06', '2025-06-14 19:13:06'),
+(6, 8, 'daily', 'Eventbrite is an American live events marketplace and website.', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', '2025-06-14', NULL, NULL, 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', NULL, 'submitted', NULL, '2025-06-14 19:14:46', '2025-06-14 19:14:46', '2025-06-14 19:14:46'),
+(7, 8, 'daily', 'Database Management', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', '2025-06-14', NULL, NULL, '0', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', 'Eventbrite is an American live events marketplace and website. The service allows users to browse, create, and promote local events. The service charges a fee to event organizers in exchange for online ticketing services, unless the event is free. In September or October 2023, Eventbrite changed their pricing plans to limit free events to 25 tickets before they would begin to charge organizers fees. Launched in 2006 and headquartered in San Francisco, Eventbrite opened their first international office in the United Kingdom in 2012', NULL, 'submitted', 'uploads/reports/report_8_1749929990.pdf', '2025-06-14 19:40:08', '2025-06-14 19:15:20', '2025-06-14 19:40:08');
+
 -- --------------------------------------------------------
 
 --
@@ -725,7 +743,10 @@ INSERT INTO `supervisors` (`id`, `user_id`, `department`, `contact_info`, `creat
 (21, 2, 'Information Technology', 'it@university.ac.tz | +255714000112', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
 (22, 11, 'Computer Engineering', 'ce@university.ac.tz | +255714000211', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
 (23, 14, 'Cyber Security', 'cyber@tech.ac.tz | +255714000214', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
-(24, 18, 'Software Engineering', 'se@college.ac.tz | +255714000218', '2025-05-04 15:02:59', '2025-05-04 15:02:59');
+(24, 18, 'Software Engineering', 'se@college.ac.tz | +255714000218', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
+(25, 29, 'Computer Science', 'Computer Science | +255123456789', '2025-06-14 14:12:26', '2025-06-14 14:12:26'),
+(26, 30, 'Computer Science', 'Computer Science | 255123456789', '2025-06-14 14:14:54', '2025-06-14 14:14:54'),
+(27, 31, 'Computer Science', 'Computer Science | 0753225961', '2025-06-14 14:18:32', '2025-06-14 14:18:32');
 
 -- --------------------------------------------------------
 
@@ -744,6 +765,13 @@ CREATE TABLE `supervisor_assignments` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `supervisor_assignments`
+--
+
+INSERT INTO `supervisor_assignments` (`assignment_id`, `supervisor_id`, `student_id`, `assignment_type`, `assigned_date`, `status`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 31, 8, 'academic', '2025-06-14', 'active', 'my student', '2025-06-14 14:19:43', '2025-06-14 14:19:43');
 
 -- --------------------------------------------------------
 
@@ -858,7 +886,10 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `created_at`, `s
 (23, 'Khamis Omar', 'hamis2r@gmail.com', '$2y$10$P/iVjHzistuuuN5nHtYdyOMXHHmeoxSIH3DoqkrPUhfS1gV6vGUFC', 'Invigilator', '2025-04-19 12:36:54', 'Pending', NULL, NULL, 'uploads/placeholder.png'),
 (24, 'Kist Test', 'kist@iptsystem.com', '$2y$10$Oc9qr9d9Y/oHIG.WhVSfwe2Vxito8VvY/RKmFN9wpFkqB88tH0vya', 'Supervisor', '2025-05-25 07:02:22', 'Pending', NULL, NULL, 'uploads/istockphoto-1214977097-612x612.jpg'),
 (25, 'Dr. John Smith', 'supervisor@test.com', '$2y$12$WFreiLzqzvDh3naT6z7yiOtnGzNWOjEsBaEJjELTIczsprwaXt4tC', 'Supervisor', '2025-06-13 21:25:05', 'Pending', NULL, NULL, NULL),
-(26, 'Prof. Sarah Johnson', 'sarah.supervisor@test.com', '$2y$12$fQ7mgKhSzK04CMWwSOYu0OJy7uRue3sYYTMYbApwep39YGGws41Ey', 'Supervisor', '2025-06-13 21:25:05', 'Pending', NULL, NULL, NULL);
+(26, 'Prof. Sarah Johnson', 'sarah.supervisor@test.com', '$2y$12$fQ7mgKhSzK04CMWwSOYu0OJy7uRue3sYYTMYbApwep39YGGws41Ey', 'Supervisor', '2025-06-13 21:25:05', 'Pending', NULL, NULL, NULL),
+(29, 'Test Supervisor', 'test_supervisor@example.com', '$2y$10$klqMsV6A/RZGV7J7mUBT3uoaKKndgnAPUUm1LOElpwslEgoc5pu7W', 'Supervisor', '2025-06-14 14:12:26', 'active', '+255123456789', NULL, NULL),
+(30, 'Web Test Supervisor', 'webtest@example.com', '$2y$10$y8X8LioyCeyRGaCHjll89.XsOm5jezPrU.JZD37CHI5q5v6HEVfF.', 'Supervisor', '2025-06-14 14:14:54', 'active', '255123456789', NULL, NULL),
+(31, 'ELIA WILLIAM MARIKI', 'supervisor@supervisor.com', '$2y$10$sG6uphuAJW/GQ2yn4s45eOor9EClPSpWmLZwKLrwmo.WGZcfgy6AG', 'Supervisor', '2025-06-14 14:18:32', 'active', '0753225961', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1036,6 +1067,12 @@ ALTER TABLE `student_reports`
   ADD KEY `student_id` (`student_id`);
 
 --
+-- Indexes for table `supervisors`
+--
+ALTER TABLE `supervisors`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `supervisor_assignments`
 --
 ALTER TABLE `supervisor_assignments`
@@ -1120,13 +1157,13 @@ ALTER TABLE `report_reviews`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `students_auth`
 --
 ALTER TABLE `students_auth`
-  MODIFY `auth_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `auth_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `student_documents`
@@ -1156,13 +1193,19 @@ ALTER TABLE `student_notifications`
 -- AUTO_INCREMENT for table `student_reports`
 --
 ALTER TABLE `student_reports`
-  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `supervisors`
+--
+ALTER TABLE `supervisors`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `supervisor_assignments`
 --
 ALTER TABLE `supervisor_assignments`
-  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `supervisor_meetings`
@@ -1180,7 +1223,7 @@ ALTER TABLE `supervisor_messages`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- Constraints for dumped tables

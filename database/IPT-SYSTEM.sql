@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.1deb1+deb12u1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jun 06, 2025 at 05:17 PM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: localhost:3306
+-- Generation Time: Jun 14, 2025 at 01:07 PM
+-- Server version: 10.11.11-MariaDB-0+deb12u1
+-- PHP Version: 8.2.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `ipt-sys-test`
+-- Database: `IPT-SYSTEM`
 --
 
 -- --------------------------------------------------------
@@ -87,6 +87,7 @@ INSERT INTO `admins` (`id`, `email`, `password`) VALUES
 CREATE TABLE `applications` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
+  `student_id` int(11) DEFAULT NULL,
   `full_name` varchar(100) NOT NULL,
   `phone` varchar(10) NOT NULL,
   `reg_number` varchar(50) NOT NULL,
@@ -101,8 +102,8 @@ CREATE TABLE `applications` (
 -- Dumping data for table `applications`
 --
 
-INSERT INTO `applications` (`id`, `user_id`, `full_name`, `phone`, `reg_number`, `department`, `industrial`, `application_date`, `created_at`, `status`) VALUES
-(14, 24, '0623641759', 'Lulu Ibrah', '12345678910', 'ICT', 'Sheria House,Airport,Bandarini', '2025-06-07', '2025-06-06 12:15:29', 'pending');
+INSERT INTO `applications` (`id`, `user_id`, `student_id`, `full_name`, `phone`, `reg_number`, `department`, `industrial`, `application_date`, `created_at`, `status`) VALUES
+(14, 24, NULL, '0623641759', 'Lulu Ibrah', '12345678910', 'ICT', 'Sheria House,Airport,Bandarini', '2025-06-07', '2025-06-06 12:15:29', 'pending');
 
 -- --------------------------------------------------------
 
@@ -450,6 +451,24 @@ INSERT INTO `reports` (`id`, `user_id`, `week_number`, `start_date`, `end_date`,
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `report_reviews`
+--
+
+CREATE TABLE `report_reviews` (
+  `review_id` int(11) NOT NULL,
+  `report_id` int(11) NOT NULL,
+  `supervisor_id` int(11) NOT NULL,
+  `review_status` enum('pending','reviewed','approved','needs_revision') DEFAULT 'pending',
+  `feedback_content` text DEFAULT NULL,
+  `grade` varchar(10) DEFAULT NULL,
+  `review_date` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 
@@ -481,18 +500,18 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 
 CREATE TABLE `students` (
   `student_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `full_name` varchar(255) NOT NULL,
   `reg_number` varchar(100) NOT NULL,
-  `gender` enum('Male','Female','Other') NOT NULL,
-  `college_name` varchar(255) NOT NULL,
-  `department` varchar(255) NOT NULL,
-  `course_name` varchar(255) NOT NULL,
-  `program` varchar(100) NOT NULL,
-  `level` varchar(50) NOT NULL,
-  `year_of_study` tinyint(3) UNSIGNED NOT NULL,
-  `phone_number` varchar(20) NOT NULL,
-  `address` varchar(500) NOT NULL,
+  `gender` enum('Male','Female','Other') DEFAULT NULL,
+  `college_name` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
+  `course_name` varchar(255) DEFAULT NULL,
+  `program` varchar(100) DEFAULT NULL,
+  `level` varchar(50) DEFAULT NULL,
+  `year_of_study` tinyint(3) DEFAULT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `address` varchar(500) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -504,7 +523,155 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`student_id`, `user_id`, `full_name`, `reg_number`, `gender`, `college_name`, `department`, `course_name`, `program`, `level`, `year_of_study`, `phone_number`, `address`, `email`, `created_at`, `updated_at`, `profile_photo`) VALUES
-(1, 24, 'Lulu Ibrahim', 'XYZ123456', 'Female', 'KIST', 'ICT', 'ICT', 'IT', '6', 255, '0623641759', '73201', 'hamis2r@gmail.com', '2025-06-06 13:25:50', '2025-06-06 13:38:02', 'uploads/profiles/1749217082_Aisha_approvedPhoto_resized.jpg');
+(1, 24, 'Lulu Ibrahim', 'XYZ123456', 'Female', 'KIST', 'ICT', 'ICT', 'IT', '6', 4, '0623641759', '73201', 'hamis2r@gmail.com', '2025-06-06 13:25:50', '2025-06-13 18:50:48', 'uploads/profiles/1749217082_Aisha_approvedPhoto_resized.jpg'),
+(2, NULL, 'Raya Boyle', '123433322008', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'kifyqegixe@mailinator.com', '2025-06-13 18:51:45', '2025-06-13 18:51:45', NULL),
+(3, NULL, 'Felicia Mcbride', 'Ea ab esse ut venia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'gunem@mailinator.com', '2025-06-13 18:51:54', '2025-06-13 18:51:54', NULL),
+(4, NULL, 'ELIA WILLIAM MARIKI', 'T22-03-13063', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'dawillygene@gmail.com', '2025-06-13 18:59:15', '2025-06-13 18:59:15', NULL),
+(5, NULL, 'Test Student', 'TEST123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test@example.com', '2025-06-13 19:02:12', '2025-06-13 19:02:12', NULL),
+(6, NULL, 'Test Profile User', 'PROFILE123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'testprofile@example.com', '2025-06-13 19:47:15', '2025-06-13 19:47:15', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `students_auth`
+--
+
+CREATE TABLE `students_auth` (
+  `auth_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `students_auth`
+--
+
+INSERT INTO `students_auth` (`auth_id`, `student_id`, `email`, `password`, `created_at`, `updated_at`) VALUES
+(1, 2, 'kifyqegixe@mailinator.com', '$2y$10$H6aFOSIXTXRkWemVMqSvz.bL3Xptq0GJbp1oSSWeTyzmokvtMJsV2', '2025-06-13 18:51:45', '2025-06-13 18:51:45'),
+(2, 3, 'gunem@mailinator.com', '$2y$10$oOE7od38EciFZtgCYqckGuUx347dvXMlxK6vefr7SPmkPkbRKJDai', '2025-06-13 18:51:54', '2025-06-13 18:51:54'),
+(3, 4, 'dawillygene@gmail.com', '$2y$10$qi9XgB6d0XIG2OxNuxI2Dukta6NUIykvPkkdeStMZH1Ho8berLdiO', '2025-06-13 18:59:15', '2025-06-13 18:59:15'),
+(4, 5, 'test@example.com', '$2y$10$uILBi1Z0u97p004bmxFeZOF3Plgqe0T0BSHkluNzDG8Bl9NQ0Z8Wm', '2025-06-13 19:02:12', '2025-06-13 19:02:12'),
+(5, 6, 'testprofile@example.com', '$2y$10$b7H/EEio6FnmNsqiqmEtDuwd2f6dMN0cT6LYxgJXA9RCp/u5Hx1pi', '2025-06-13 19:47:15', '2025-06-13 19:47:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_documents`
+--
+
+CREATE TABLE `student_documents` (
+  `document_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `document_type` enum('application_letter','resume','cover_letter','report','certificate','other') NOT NULL,
+  `document_title` varchar(255) NOT NULL,
+  `document_description` text DEFAULT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_size` int(11) NOT NULL,
+  `file_type` varchar(50) NOT NULL,
+  `is_generated` tinyint(1) DEFAULT 0,
+  `status` enum('draft','final','submitted','approved') DEFAULT 'draft',
+  `generated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_evaluations`
+--
+
+CREATE TABLE `student_evaluations` (
+  `evaluation_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `supervisor_id` int(11) NOT NULL,
+  `evaluation_type` enum('mid_term','final','monthly','custom') NOT NULL,
+  `evaluation_period` varchar(100) NOT NULL,
+  `technical_skills_score` int(11) DEFAULT NULL CHECK (`technical_skills_score` >= 0 and `technical_skills_score` <= 100),
+  `communication_score` int(11) DEFAULT NULL CHECK (`communication_score` >= 0 and `communication_score` <= 100),
+  `teamwork_score` int(11) DEFAULT NULL CHECK (`teamwork_score` >= 0 and `teamwork_score` <= 100),
+  `punctuality_score` int(11) DEFAULT NULL CHECK (`punctuality_score` >= 0 and `punctuality_score` <= 100),
+  `initiative_score` int(11) DEFAULT NULL CHECK (`initiative_score` >= 0 and `initiative_score` <= 100),
+  `overall_grade` varchar(10) DEFAULT NULL,
+  `strengths` text DEFAULT NULL,
+  `areas_for_improvement` text DEFAULT NULL,
+  `recommendations` text DEFAULT NULL,
+  `evaluation_date` date NOT NULL,
+  `status` enum('draft','submitted','approved') DEFAULT 'draft',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_feedback`
+--
+
+CREATE TABLE `student_feedback` (
+  `feedback_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `feedback_type` enum('supervisor','industrial','academic','system') NOT NULL DEFAULT 'supervisor',
+  `feedback_title` varchar(255) NOT NULL,
+  `feedback_content` text NOT NULL,
+  `supervisor_name` varchar(255) DEFAULT NULL,
+  `company_name` varchar(255) DEFAULT NULL,
+  `feedback_date` date NOT NULL,
+  `rating` int(1) DEFAULT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `status` enum('pending','read','responded') DEFAULT 'pending',
+  `response_content` text DEFAULT NULL,
+  `response_date` timestamp NULL DEFAULT NULL,
+  `is_public` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_notifications`
+--
+
+CREATE TABLE `student_notifications` (
+  `notification_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `notification_type` enum('feedback','report','application','system') NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `related_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_reports`
+--
+
+CREATE TABLE `student_reports` (
+  `report_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `report_type` enum('daily','weekly','monthly') NOT NULL DEFAULT 'daily',
+  `report_title` varchar(255) NOT NULL,
+  `report_content` text NOT NULL,
+  `report_date` date NOT NULL,
+  `week_number` int(11) DEFAULT NULL,
+  `month_number` int(11) DEFAULT NULL,
+  `activities_completed` text DEFAULT NULL,
+  `skills_acquired` text DEFAULT NULL,
+  `challenges_faced` text DEFAULT NULL,
+  `supervisor_comments` text DEFAULT NULL,
+  `status` enum('draft','submitted','reviewed','approved','needs_revision') DEFAULT 'draft',
+  `attachment_path` varchar(500) DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -559,6 +726,72 @@ INSERT INTO `supervisors` (`id`, `user_id`, `department`, `contact_info`, `creat
 (22, 11, 'Computer Engineering', 'ce@university.ac.tz | +255714000211', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
 (23, 14, 'Cyber Security', 'cyber@tech.ac.tz | +255714000214', '2025-05-04 15:02:59', '2025-05-04 15:02:59'),
 (24, 18, 'Software Engineering', 'se@college.ac.tz | +255714000218', '2025-05-04 15:02:59', '2025-05-04 15:02:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `supervisor_assignments`
+--
+
+CREATE TABLE `supervisor_assignments` (
+  `assignment_id` int(11) NOT NULL,
+  `supervisor_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `assignment_type` enum('academic','industrial') NOT NULL DEFAULT 'academic',
+  `assigned_date` date NOT NULL,
+  `status` enum('active','completed','terminated') DEFAULT 'active',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `supervisor_meetings`
+--
+
+CREATE TABLE `supervisor_meetings` (
+  `meeting_id` int(11) NOT NULL,
+  `supervisor_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `meeting_title` varchar(255) NOT NULL,
+  `meeting_description` text DEFAULT NULL,
+  `meeting_date` date NOT NULL,
+  `meeting_time` time NOT NULL,
+  `duration_minutes` int(11) DEFAULT 60,
+  `location` varchar(255) DEFAULT NULL,
+  `meeting_type` enum('physical','virtual','phone') DEFAULT 'physical',
+  `meeting_link` varchar(500) DEFAULT NULL,
+  `status` enum('scheduled','completed','cancelled','rescheduled') DEFAULT 'scheduled',
+  `agenda` text DEFAULT NULL,
+  `meeting_notes` text DEFAULT NULL,
+  `action_items` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `supervisor_messages`
+--
+
+CREATE TABLE `supervisor_messages` (
+  `message_id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
+  `sender_type` enum('supervisor','student','admin') NOT NULL,
+  `recipient_id` int(11) NOT NULL,
+  `recipient_type` enum('supervisor','student','admin') NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `message_content` text NOT NULL,
+  `is_read` tinyint(1) DEFAULT 0,
+  `is_urgent` tinyint(1) DEFAULT 0,
+  `parent_message_id` int(11) DEFAULT NULL,
+  `attachment_path` varchar(500) DEFAULT NULL,
+  `sent_at` timestamp NULL DEFAULT current_timestamp(),
+  `read_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -623,7 +856,9 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `created_at`, `s
 (20, 'Mcha Khamis', 'khmcha@gmail.com', '$2y$10$k1IOQFgn41SIe.NBDvDQZeIgYi61rlJzgvQtrFz7nbRJ2KMiU6G02', 'Supervisor', '2024-07-21 10:01:32', 'Pending', NULL, NULL, 'uploads/450445711_432286263130497_77923197080337703_n.jpg'),
 (22, 'Pandu Jecha', 'pandujecha@gmail.com', '$2y$10$DSX0vRqNOuJMcMDEa30nCeN9TLa1fz6hOWZDU.fsbkTgAWkd23uyW', 'Supervisor', '2024-07-29 05:32:13', 'Pending', NULL, NULL, 'uploads/461637240508.jpg'),
 (23, 'Khamis Omar', 'hamis2r@gmail.com', '$2y$10$P/iVjHzistuuuN5nHtYdyOMXHHmeoxSIH3DoqkrPUhfS1gV6vGUFC', 'Invigilator', '2025-04-19 12:36:54', 'Pending', NULL, NULL, 'uploads/placeholder.png'),
-(24, 'Kist Test', 'kist@iptsystem.com', '$2y$10$Oc9qr9d9Y/oHIG.WhVSfwe2Vxito8VvY/RKmFN9wpFkqB88tH0vya', 'Supervisor', '2025-05-25 07:02:22', 'Pending', NULL, NULL, 'uploads/istockphoto-1214977097-612x612.jpg');
+(24, 'Kist Test', 'kist@iptsystem.com', '$2y$10$Oc9qr9d9Y/oHIG.WhVSfwe2Vxito8VvY/RKmFN9wpFkqB88tH0vya', 'Supervisor', '2025-05-25 07:02:22', 'Pending', NULL, NULL, 'uploads/istockphoto-1214977097-612x612.jpg'),
+(25, 'Dr. John Smith', 'supervisor@test.com', '$2y$12$WFreiLzqzvDh3naT6z7yiOtnGzNWOjEsBaEJjELTIczsprwaXt4tC', 'Supervisor', '2025-06-13 21:25:05', 'Pending', NULL, NULL, NULL),
+(26, 'Prof. Sarah Johnson', 'sarah.supervisor@test.com', '$2y$12$fQ7mgKhSzK04CMWwSOYu0OJy7uRue3sYYTMYbApwep39YGGws41Ey', 'Supervisor', '2025-06-13 21:25:05', 'Pending', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -662,7 +897,8 @@ ALTER TABLE `admins`
 --
 ALTER TABLE `applications`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `idx_student_id` (`student_id`);
 
 --
 -- Indexes for table `cache`
@@ -741,6 +977,13 @@ ALTER TABLE `reports`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `report_reviews`
+--
+ALTER TABLE `report_reviews`
+  ADD PRIMARY KEY (`review_id`),
+  ADD KEY `report_id` (`report_id`);
+
+--
 -- Indexes for table `students`
 --
 ALTER TABLE `students`
@@ -748,6 +991,71 @@ ALTER TABLE `students`
   ADD UNIQUE KEY `reg_number` (`reg_number`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `students_auth`
+--
+ALTER TABLE `students_auth`
+  ADD PRIMARY KEY (`auth_id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `student_documents`
+--
+ALTER TABLE `student_documents`
+  ADD PRIMARY KEY (`document_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `student_evaluations`
+--
+ALTER TABLE `student_evaluations`
+  ADD PRIMARY KEY (`evaluation_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `student_feedback`
+--
+ALTER TABLE `student_feedback`
+  ADD PRIMARY KEY (`feedback_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `student_notifications`
+--
+ALTER TABLE `student_notifications`
+  ADD PRIMARY KEY (`notification_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `student_reports`
+--
+ALTER TABLE `student_reports`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `supervisor_assignments`
+--
+ALTER TABLE `supervisor_assignments`
+  ADD PRIMARY KEY (`assignment_id`),
+  ADD UNIQUE KEY `unique_assignment` (`supervisor_id`,`student_id`,`assignment_type`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `supervisor_meetings`
+--
+ALTER TABLE `supervisor_meetings`
+  ADD PRIMARY KEY (`meeting_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `supervisor_messages`
+--
+ALTER TABLE `supervisor_messages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `parent_message_id` (`parent_message_id`);
 
 --
 -- Indexes for table `users`
@@ -803,16 +1111,76 @@ ALTER TABLE `reports`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `report_reviews`
+--
+ALTER TABLE `report_reviews`
+  MODIFY `review_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `students_auth`
+--
+ALTER TABLE `students_auth`
+  MODIFY `auth_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `student_documents`
+--
+ALTER TABLE `student_documents`
+  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_evaluations`
+--
+ALTER TABLE `student_evaluations`
+  MODIFY `evaluation_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_feedback`
+--
+ALTER TABLE `student_feedback`
+  MODIFY `feedback_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_notifications`
+--
+ALTER TABLE `student_notifications`
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_reports`
+--
+ALTER TABLE `student_reports`
+  MODIFY `report_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `supervisor_assignments`
+--
+ALTER TABLE `supervisor_assignments`
+  MODIFY `assignment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `supervisor_meetings`
+--
+ALTER TABLE `supervisor_meetings`
+  MODIFY `meeting_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `supervisor_messages`
+--
+ALTER TABLE `supervisor_messages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- Constraints for dumped tables
@@ -855,10 +1223,64 @@ ALTER TABLE `reports`
   ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `students`
+-- Constraints for table `report_reviews`
 --
-ALTER TABLE `students`
-  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+ALTER TABLE `report_reviews`
+  ADD CONSTRAINT `report_reviews_ibfk_1` FOREIGN KEY (`report_id`) REFERENCES `student_reports` (`report_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `students_auth`
+--
+ALTER TABLE `students_auth`
+  ADD CONSTRAINT `students_auth_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_documents`
+--
+ALTER TABLE `student_documents`
+  ADD CONSTRAINT `student_documents_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_evaluations`
+--
+ALTER TABLE `student_evaluations`
+  ADD CONSTRAINT `student_evaluations_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_feedback`
+--
+ALTER TABLE `student_feedback`
+  ADD CONSTRAINT `student_feedback_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_notifications`
+--
+ALTER TABLE `student_notifications`
+  ADD CONSTRAINT `student_notifications_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `student_reports`
+--
+ALTER TABLE `student_reports`
+  ADD CONSTRAINT `student_reports_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `supervisor_assignments`
+--
+ALTER TABLE `supervisor_assignments`
+  ADD CONSTRAINT `supervisor_assignments_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `supervisor_meetings`
+--
+ALTER TABLE `supervisor_meetings`
+  ADD CONSTRAINT `supervisor_meetings_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `supervisor_messages`
+--
+ALTER TABLE `supervisor_messages`
+  ADD CONSTRAINT `supervisor_messages_ibfk_1` FOREIGN KEY (`parent_message_id`) REFERENCES `supervisor_messages` (`message_id`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

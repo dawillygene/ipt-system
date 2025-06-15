@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Application Submission</title>
+</head>
+<body>
+    <h2>Test Application Submission</h2>
+    <form action="student_applications.php" method="POST">
+        <input type="hidden" name="action" value="submit">
+        
+        <p>Company Name: <input type="text" name="company_name" value="Test Company Ltd" required></p>
+        <p>Location: <input type="text" name="company_location" value="Dodoma, Tanzania" required></p>
+        <p>Position: <input type="text" name="position_title" value="Software Developer Intern" required></p>
+        <p>Duration: <input type="number" name="training_duration" value="12" required></p>
+        <p>Start Date: <input type="date" name="start_date" value="2025-07-01" required></p>
+        <p>End Date: <input type="date" name="end_date" value="2025-09-30" required></p>
+        <p>Training Area: <input type="text" name="training_area" value="Software Development" required></p>
+        <p>Skills: <input type="text" name="skills_to_acquire" value="PHP, JavaScript"></p>
+        <p>Motivation Letter: <textarea name="motivation_letter" required>This is a test motivation letter that is longer than 100 characters to meet the minimum requirement for application submission. I am very interested in this internship opportunity and believe it will help me grow my skills.</textarea></p>
+        
+        <p><button type="submit">Submit Application</button></p>
+    </form>
+    
+    <h3>Note:</h3>
+    <p>You need to be logged in as a student to submit this form. Please use the regular student login process first.</p>
+</body>
+</html>

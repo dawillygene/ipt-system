@@ -23,28 +23,66 @@ $stmt->close();
 // Set variables required by the reusable sidebar
 $student_data = $student;
 
-// Create applications table if it doesn't exist
-$con->query("CREATE TABLE IF NOT EXISTS applications (
-    application_id INT(11) AUTO_INCREMENT PRIMARY KEY,
+// Create applications table if it doesn't exist (or alter existing)
+$create_table_sql = "CREATE TABLE IF NOT EXISTS applications (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
     student_id INT(11) NOT NULL,
-    company_name VARCHAR(255) NOT NULL,
-    company_location VARCHAR(255) NOT NULL,
-    position_title VARCHAR(255) NOT NULL,
-    training_duration INT(11) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    training_area VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255),
+    company_location VARCHAR(255),
+    position_title VARCHAR(255),
+    training_duration INT(11),
+    start_date DATE,
+    end_date DATE,
+    training_area VARCHAR(255),
     skills_to_acquire TEXT,
-    motivation_letter TEXT NOT NULL,
+    motivation_letter TEXT,
     preferred_company1 VARCHAR(255),
     preferred_company2 VARCHAR(255),
     preferred_company3 VARCHAR(255),
-    status ENUM('draft', 'submitted', 'approved', 'rejected', 'in_review') DEFAULT 'draft',
+    status ENUM('draft', 'submitted', 'approved', 'rejected', 'in_review', 'pending') DEFAULT 'draft',
     submitted_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
-)");
+)";
+
+// First check if table exists and has the right structure
+$result = $con->query("SHOW TABLES LIKE 'applications'");
+if ($result->num_rows > 0) {
+    // Table exists, check if it has all required columns
+    $columns_result = $con->query("DESCRIBE applications");
+    $existing_columns = [];
+    while ($row = $columns_result->fetch_assoc()) {
+        $existing_columns[] = $row['Field'];
+    }
+    
+    // Add missing columns if needed
+    $required_columns = [
+        'company_name' => 'VARCHAR(255)',
+        'company_location' => 'VARCHAR(255)',
+        'position_title' => 'VARCHAR(255)',
+        'training_duration' => 'INT(11)',
+        'start_date' => 'DATE',
+        'end_date' => 'DATE',
+        'training_area' => 'VARCHAR(255)',
+        'skills_to_acquire' => 'TEXT',
+        'motivation_letter' => 'TEXT',
+        'preferred_company1' => 'VARCHAR(255)',
+        'preferred_company2' => 'VARCHAR(255)',
+        'preferred_company3' => 'VARCHAR(255)',
+        'submitted_at' => 'TIMESTAMP NULL',
+        'updated_at' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+    ];
+    
+    foreach ($required_columns as $column => $definition) {
+        if (!in_array($column, $existing_columns)) {
+            $con->query("ALTER TABLE applications ADD COLUMN $column $definition");
+        }
+    }
+} else {
+    // Create new table
+    $con->query($create_table_sql);
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -106,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($existing) {
             // Update existing application
             $update_stmt = $con->prepare("UPDATE applications SET company_name = ?, company_location = ?, position_title = ?, training_duration = ?, start_date = ?, end_date = ?, training_area = ?, skills_to_acquire = ?, motivation_letter = ?, preferred_company1 = ?, preferred_company2 = ?, preferred_company3 = ?, status = ?, submitted_at = ? WHERE student_id = ?");
-            $update_stmt->bind_param("sssississsssssi", $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at, $student_id);
+            $update_stmt->bind_param("sssisssssssssss", $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at, $student_id);
             
             if ($update_stmt->execute()) {
                 $success = ($action === 'submit') ? 'Application submitted successfully!' : 'Application saved as draft';
@@ -117,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Create new application
             $insert_stmt = $con->prepare("INSERT INTO applications (student_id, company_name, company_location, position_title, training_duration, start_date, end_date, training_area, skills_to_acquire, motivation_letter, preferred_company1, preferred_company2, preferred_company3, status, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $insert_stmt->bind_param("isssisssssssss", $student_id, $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at);
+            $insert_stmt->bind_param("isssissssssssss", $student_id, $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at);
             
             if ($insert_stmt->execute()) {
                 $success = ($action === 'submit') ? 'Application submitted successfully!' : 'Application saved as draft';

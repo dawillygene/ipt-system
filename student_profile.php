@@ -26,6 +26,9 @@ $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
+// Set variables required by the reusable sidebar
+$student_data = $student;
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'update_profile';
@@ -201,6 +204,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     }
 }
+
+// Get student statistics for navigation
+function getStudentStats($con, $student_id) {
+    $stats = [];
+    
+    // Get applications count (if applications table exists for students)
+    try {
+        $stmt = $con->prepare("SELECT COUNT(*) as total FROM applications WHERE student_id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $stats['applications'] = $stmt->get_result()->fetch_assoc()['total'];
+        $stmt->close();
+    } catch (Exception $e) {
+        $stats['applications'] = 0; // Default if table doesn't exist
+    }
+    
+    // Get reports count
+    try {
+        $stmt = $con->prepare("SELECT COUNT(*) as total FROM reports WHERE student_id = ?");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $stats['reports'] = $stmt->get_result()->fetch_assoc()['total'];
+        $stmt->close();
+    } catch (Exception $e) {
+        $stats['reports'] = 0; // Default if table doesn't exist
+    }
+    
+    // Get pending feedback count
+    try {
+        $stmt = $con->prepare("SELECT COUNT(*) as total FROM feedback WHERE student_id = ? AND status = 'pending'");
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $stats['pending_feedback'] = $stmt->get_result()->fetch_assoc()['total'];
+        $stmt->close();
+    } catch (Exception $e) {
+        $stats['pending_feedback'] = 0; // Default if table doesn't exist
+    }
+    
+    return $stats;
+}
+
+$stats = getStudentStats($con, $student_id);
+$profile_photo = $student['profile_photo'] ?? null;
+$reg_number = $student['reg_number'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -225,38 +272,262 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Enhanced responsive design with static sidebar */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Hide desktop sidebar on mobile */
+            #sidebar {
+                display: none;
+            }
+            .main-content {
+                padding: 0.75rem;
+                margin-left: 0 !important; /* Ensure no left margin on mobile */
+                width: 100% !important; /* Full width on mobile */
+            }
+            .navbar-brand {
+                font-size: 0.9rem;
+            }
+            /* Compact navbar */
+            nav .h-16 {
+                height: 2.75rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .main-content {
+                padding: 0.5rem;
+            }
+            /* Ultra compact navbar */
+            nav .h-16 {
+                height: 2.5rem;
+            }
+            nav .px-6 {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 0.375rem;
+            }
+            /* Very compact navbar */
+            nav .h-16 {
+                height: 2.25rem;
+            }
+            .navbar-brand {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Navbar gradient */
+        .navbar-gradient {
+            background: linear-gradient(135deg, #07442d 0%, #206f56 50%, #0f7b5a 100%);
+        }
+
+        /* Profile glow effect */
+        .profile-glow {
+            box-shadow: 0 0 20px rgba(7, 68, 45, 0.3);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-primary text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-lg sm:text-xl font-bold">
-                            <i class="fas fa-graduation-cap mr-2"></i>IPT System
-                        </h1>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Enhanced Static Navigation Bar - Project Colors -->
+    <nav class="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 shadow-2xl border-b border-slate-600 static top-0 z-50">
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Left side - Logo and Brand -->
+                <div class="flex items-center space-x-4">
+                    <!-- Mobile sidebar toggle -->
+                    <button id="sidebar-menu-btn" class="md:hidden text-slate-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-slate-600/50 transition-all duration-200">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    
+                    <!-- Brand -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-lg">
+                            <i class="fas fa-graduation-cap text-white text-lg"></i>
+                        </div>
+                        <div class="hidden sm:block">
+                            <h1 class="text-xl font-bold text-white">IPT System</h1>
+                            <p class="text-sm text-slate-300 hidden lg:block">Industrial Practical Training</p>
+                        </div>
+                        <h1 class="sm:hidden text-lg font-bold text-white">IPT</h1>
                     </div>
                 </div>
+
+                <!-- Center - Page breadcrumb -->
+                <div class="hidden lg:flex items-center space-x-2 text-slate-300">
+                    <i class="fas fa-home text-sm"></i>
+                    <span class="text-sm">/</span>
+                    <span class="text-sm font-medium text-white">Profile</span>
+                </div>
+
+                <!-- Right side - User menu and actions -->
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm">Welcome, <?php echo htmlspecialchars($student_name); ?></span>
-                    <a href="student_dashboard.php" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-secondary transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i>Back to Dashboard
-                    </a>
-                    <a href="student_logout.php" class="px-3 py-2 rounded-md text-sm font-medium bg-red-600 hover:bg-red-700 transition-colors">
-                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
-                    </a>
+                    <!-- Notifications -->
+                    <div class="hidden sm:flex items-center space-x-3">
+                        <?php if ($stats['pending_feedback'] > 0): ?>
+                        <button class="relative p-2 text-slate-300 hover:text-white hover:bg-slate-600/50 rounded-lg transition-all duration-200">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse font-medium">
+                                <?php echo $stats['pending_feedback']; ?>
+                            </span>
+                        </button>
+                        <?php endif; ?>
+                        
+                        <!-- Quick access to dashboard -->
+                        <a href="student_dashboard.php" class="hidden md:flex items-center space-x-3 px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-200 border border-slate-600">
+                            <i class="fas fa-tachometer-alt text-white text-sm"></i>
+                            <span class="text-sm font-medium text-slate-200 hidden lg:inline">Dashboard</span>
+                        </a>
+                    </div>
+
+                    <!-- Mobile user menu button -->
+                    <button id="mobile-menu-btn" class="md:hidden flex items-center space-x-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-200 border border-slate-600">
+                        <?php if (!empty($profile_photo) && file_exists($profile_photo)): ?>
+                            <img src="<?php echo htmlspecialchars($profile_photo); ?>" alt="Profile" class="w-6 h-6 rounded-full object-cover">
+                        <?php else: ?>
+                            <div class="w-6 h-6 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-xs"></i>
+                            </div>
+                        <?php endif; ?>
+                        <i class="fas fa-chevron-down text-slate-300 text-sm"></i>
+                    </button>
+
+                    <!-- Desktop user menu -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <!-- User info -->
+                        <div class="text-right hidden lg:block">
+                            <div class="text-sm font-semibold text-white">
+                                <?php echo htmlspecialchars($student_name); ?>
+                            </div>
+                            <?php if (!empty($reg_number)): ?>
+                                <div class="text-xs text-slate-300">
+                                    <?php echo htmlspecialchars($reg_number); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Profile picture -->
+                        <div class="relative">
+                            <?php if (!empty($profile_photo) && file_exists($profile_photo)): ?>
+                                <img src="<?php echo htmlspecialchars($profile_photo); ?>" alt="Profile" 
+                                     class="w-10 h-10 rounded-full object-cover border-2 border-slate-600 hover:border-primary/50 transition-all duration-200 shadow-sm">
+                            <?php else: ?>
+                                <div class="w-10 h-10 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full flex items-center justify-center border-2 border-slate-600 hover:border-primary/50 transition-all duration-200 shadow-sm">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                            <?php endif; ?>
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-800 rounded-full shadow-sm"></div>
+                        </div>
+
+                        <!-- Logout -->
+                        <a href="student_logout.php" class="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-all duration-200 border border-red-500/30 hover:border-red-500/50">
+                            <i class="fas fa-sign-out-alt text-sm"></i>
+                            <span class="hidden xl:inline text-sm font-medium">Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile menu dropdown -->
+            <div id="mobile-menu" class="md:hidden hidden bg-slate-800 border-t border-slate-600 rounded-b-lg shadow-lg">
+                <div class="px-4 py-3 space-y-3">
+                    <!-- User info -->
+                    <div class="flex items-center space-x-3 pb-3 border-b border-slate-600">
+                        <?php if (!empty($profile_photo) && file_exists($profile_photo)): ?>
+                            <img src="<?php echo htmlspecialchars($profile_photo); ?>" alt="Profile" 
+                                 class="w-12 h-12 rounded-full object-cover border-2 border-slate-600">
+                        <?php else: ?>
+                            <div class="w-12 h-12 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-full flex items-center justify-center border-2 border-slate-600">
+                                <i class="fas fa-user text-white text-lg"></i>
+                            </div>
+                        <?php endif; ?>
+                        <div>
+                            <div class="text-sm font-semibold text-white">
+                                <?php echo htmlspecialchars($student_name); ?>
+                            </div>
+                            <?php if (!empty($reg_number)): ?>
+                                <div class="text-xs text-slate-300">
+                                    <?php echo htmlspecialchars($reg_number); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick actions -->
+                    <div class="space-y-2">
+                        <a href="student_dashboard.php" class="flex items-center space-x-3 px-3 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors">
+                            <i class="fas fa-tachometer-alt w-5 text-center text-sm"></i>
+                            <span class="text-sm font-medium">Dashboard</span>
+                        </a>
+                        
+                        <?php if ($stats['pending_feedback'] > 0): ?>
+                        <a href="student_feedback.php" class="flex items-center space-x-3 px-3 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors">
+                            <i class="fas fa-bell w-5 text-center text-sm"></i>
+                            <span class="text-sm font-medium">Notifications</span>
+                            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                <?php echo $stats['pending_feedback']; ?>
+                            </span>
+                        </a>
+                        <?php endif; ?>
+                        
+                        <a href="change_password.php" class="flex items-center space-x-3 px-3 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition-colors">
+                            <i class="fas fa-lock w-5 text-center text-sm"></i>
+                            <span class="text-sm font-medium">Change Password</span>
+                        </a>
+                        
+                        <div class="border-t border-slate-600 pt-2">
+                            <a href="student_logout.php" class="flex items-center space-x-3 px-3 py-2 text-red-300 hover:bg-red-500/20 rounded-lg transition-colors">
+                                <i class="fas fa-sign-out-alt w-5 text-center text-sm"></i>
+                                <span class="text-sm font-medium">Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div class="px-4 sm:px-0">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Profile Management</h1>
-            <p class="text-gray-600 mb-6">Update your personal and academic information</p>
-        </div>
+    <!-- Main Layout Container -->
+    <div class="flex h-screen bg-gray-50 overflow-hidden">
+        <?php include 'includes/student_sidebar.php'; ?>
+
+
+
+
+        <!-- Main Content Area with scrollable content -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-64">
+            <!-- Page Header - Fixed -->
+            <div class="flex-shrink-0 main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4 bg-white border-b border-gray-200">
+                <div class="page-header">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div class="mb-3 sm:mb-0">
+                            <div class="flex items-center">
+                                <div>
+                                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                                        Profile Management
+                                    </h1>
+                                    <p class="text-xs sm:text-sm text-gray-600">
+                                        Update your personal and academic information
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto bg-gray-50">
+                <div class="main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
 
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200 mb-6">
@@ -311,7 +582,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <!-- Profile Form -->
-        <form method="POST" action="" enctype="multipart/form-data" class="bg-white shadow-lg rounded-lg p-6">
+        <form id="profileForm" method="POST" action="" enctype="multipart/form-data" class="bg-white shadow-lg rounded-lg p-6">
             <input type="hidden" name="action" value="update_profile">
             
             <!-- Completion Status will be inserted here by JavaScript -->
@@ -483,19 +754,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Documents & Profile Photo</h3>
                 
                 <!-- Profile Photo Section -->
-                <div class="mb-8">
-                    <h4 class="text-md font-medium text-gray-800 mb-4">Profile Photo</h4>
-                    <div class="flex items-start space-x-6">
-                        <div class="flex-shrink-0">
-                            <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                <div class="mb-6">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Profile Photo</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex justify-center lg:justify-start">
+                            <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
                                 <?php if (!empty($student['profile_photo']) && file_exists($student['profile_photo'])): ?>
-                                    <img src="<?php echo htmlspecialchars($student['profile_photo']); ?>" alt="Profile" class="w-24 h-24 rounded-full object-cover">
+                                    <img src="<?php echo htmlspecialchars($student['profile_photo']); ?>" alt="Profile" class="w-20 h-20 rounded-full object-cover">
                                 <?php else: ?>
-                                    <i class="fas fa-user text-gray-400 text-2xl"></i>
+                                    <i class="fas fa-user text-gray-400 text-xl"></i>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <div class="flex-1">
+                        <div class="lg:col-span-3">
                             <label for="profile_photo" class="block text-sm font-medium text-gray-700 mb-2">
                                 Upload Profile Photo
                             </label>
@@ -506,34 +777,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Document Upload Section -->
+                <!-- Required Documents Section -->
                 <div>
-                    <h4 class="text-md font-medium text-gray-800 mb-4">Required Documents</h4>
-                    <div class="space-y-6">
+                    <h4 class="text-md font-medium text-gray-800 mb-3">Required Documents</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         <!-- Academic Transcript -->
-                        <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                             <div class="flex items-center justify-between mb-3">
                                 <label for="academic_transcript" class="flex items-center text-sm font-medium text-gray-700">
                                     <i class="fas fa-file-alt mr-2 text-primary"></i>Academic Transcript
                                     <span class="text-red-500 ml-1">*</span>
                                 </label>
                                 <?php if (!empty($student['academic_transcript'])): ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check mr-1"></i>Uploaded
                                     </span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>Required
                                     </span>
                                 <?php endif; ?>
                             </div>
                             
                             <?php if (!empty($student['academic_transcript'])): ?>
-                                <div class="mb-3 p-3 bg-gray-50 rounded-md">
+                                <div class="mb-3 p-2 bg-gray-50 rounded-md">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-600">Current file:</span>
+                                        <span class="text-xs text-gray-600">Current file:</span>
                                         <a href="<?php echo htmlspecialchars($student['academic_transcript']); ?>" target="_blank" 
-                                           class="text-primary hover:text-secondary text-sm font-medium">
+                                           class="text-primary hover:text-secondary text-xs font-medium">
                                             <i class="fas fa-download mr-1"></i>View/Download
                                         </a>
                                     </div>
@@ -541,34 +812,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endif; ?>
                             
                             <input type="file" id="academic_transcript" name="academic_transcript" accept=".pdf,.doc,.docx"
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
+                                   class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
                         </div>
 
                         <!-- National ID / Passport -->
-                        <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                             <div class="flex items-center justify-between mb-3">
                                 <label for="id_document" class="flex items-center text-sm font-medium text-gray-700">
                                     <i class="fas fa-id-card mr-2 text-primary"></i>National ID / Passport
                                     <span class="text-red-500 ml-1">*</span>
                                 </label>
                                 <?php if (!empty($student['id_document'])): ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check mr-1"></i>Uploaded
                                     </span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>Required
                                     </span>
                                 <?php endif; ?>
                             </div>
                             
                             <?php if (!empty($student['id_document'])): ?>
-                                <div class="mb-3 p-3 bg-gray-50 rounded-md">
+                                <div class="mb-3 p-2 bg-gray-50 rounded-md">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-600">Current file:</span>
+                                        <span class="text-xs text-gray-600">Current file:</span>
                                         <a href="<?php echo htmlspecialchars($student['id_document']); ?>" target="_blank" 
-                                           class="text-primary hover:text-secondary text-sm font-medium">
+                                           class="text-primary hover:text-secondary text-xs font-medium">
                                             <i class="fas fa-download mr-1"></i>View/Download
                                         </a>
                                     </div>
@@ -576,34 +847,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endif; ?>
                             
                             <input type="file" id="id_document" name="id_document" accept=".pdf,.jpg,.jpeg,.png"
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
+                                   class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
                         </div>
 
                         <!-- Curriculum Vitae (CV) -->
-                        <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                             <div class="flex items-center justify-between mb-3">
                                 <label for="cv_document" class="flex items-center text-sm font-medium text-gray-700">
                                     <i class="fas fa-file-user mr-2 text-primary"></i>Curriculum Vitae (CV)
                                     <span class="text-red-500 ml-1">*</span>
                                 </label>
                                 <?php if (!empty($student['cv_document'])): ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check mr-1"></i>Uploaded
                                     </span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         <i class="fas fa-exclamation-triangle mr-1"></i>Required
                                     </span>
                                 <?php endif; ?>
                             </div>
                             
                             <?php if (!empty($student['cv_document'])): ?>
-                                <div class="mb-3 p-3 bg-gray-50 rounded-md">
+                                <div class="mb-3 p-2 bg-gray-50 rounded-md">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-600">Current file:</span>
+                                        <span class="text-xs text-gray-600">Current file:</span>
                                         <a href="<?php echo htmlspecialchars($student['cv_document']); ?>" target="_blank" 
-                                           class="text-primary hover:text-secondary text-sm font-medium">
+                                           class="text-primary hover:text-secondary text-xs font-medium">
                                             <i class="fas fa-download mr-1"></i>View/Download
                                         </a>
                                     </div>
@@ -611,7 +882,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php endif; ?>
                             
                             <input type="file" id="cv_document" name="cv_document" accept=".pdf,.doc,.docx"
-                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
+                                   class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
                         </div>
                     </div>
@@ -619,7 +890,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Submit Button -->
-            <div class="mt-8 pt-6 border-t border-gray-200">
+            <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="flex justify-end space-x-4">
                     <a href="student_dashboard.php" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
                         Cancel
@@ -630,6 +901,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Tab Switching JavaScript -->
@@ -654,49 +928,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         document.addEventListener('DOMContentLoaded', function() {
-            const tabLinks = document.querySelectorAll('.tab-link');
-            const tabContents = document.querySelectorAll('.tab-content');
+            // Tab functionality - Enhanced with better error handling
+            function initializeTabs() {
+                const tabLinks = document.querySelectorAll('.tab-link');
+                const tabContents = document.querySelectorAll('.tab-content');
 
-            function showTab(targetTab) {
-                // Hide all tab contents
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                });
+                function showTab(targetTab) {
+                    // Hide all tab contents
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
 
-                // Remove active styles from all tabs
+                    // Remove active styles from all tabs
+                    tabLinks.forEach(link => {
+                        link.classList.remove('border-primary', 'text-primary');
+                        link.classList.add('border-transparent', 'text-gray-500');
+                    });
+
+                    // Show target tab content
+                    const targetContent = document.getElementById('content-' + targetTab);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                    }
+
+                    // Add active styles to current tab
+                    const activeTab = document.getElementById('tab-' + targetTab);
+                    if (activeTab) {
+                        activeTab.classList.remove('border-transparent', 'text-gray-500');
+                        activeTab.classList.add('border-primary', 'text-primary');
+                    }
+                }
+
+                // Tab click handlers
                 tabLinks.forEach(link => {
-                    link.classList.remove('border-primary', 'text-primary');
-                    link.classList.add('border-transparent', 'text-gray-500');
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        if (href && href.length > 1) {
+                            const targetTab = href.substring(1);
+                            showTab(targetTab);
+                        }
+                    });
                 });
 
-                // Show target tab content
-                const targetContent = document.getElementById('content-' + targetTab);
-                if (targetContent) {
-                    targetContent.classList.remove('hidden');
-                }
-
-                // Add active styles to current tab
-                const activeTab = document.getElementById('tab-' + targetTab);
-                if (activeTab) {
-                    activeTab.classList.remove('border-transparent', 'text-gray-500');
-                    activeTab.classList.add('border-primary', 'text-primary');
-                }
+                // Initialize first tab
+                showTab('personal');
+                
+                // Make showTab function globally available for debugging
+                window.showTab = showTab;
             }
 
-            // Tab click handlers
-            tabLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetTab = this.getAttribute('href').substring(1);
-                    showTab(targetTab);
-                });
-            });
+            // Initialize tabs after DOM is ready
+            initializeTabs();
 
-            // Initialize first tab
-            showTab('personal');
-
-            // Form validation and submission
-            const profileForm = document.querySelector('form[method="POST"]');
+            // Form validation and interactions
+            const profileForm = document.getElementById('profileForm');
             if (profileForm) {
                 // Add visual indicators for required fields
                 const requiredFields = profileForm.querySelectorAll('input[required], select[required], textarea[required]');
@@ -1079,6 +1365,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             }
         });
+
+        // Mobile Navigation Menu Functionality
+        console.log('JavaScript loaded');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const sidebarMenuBtn = document.getElementById('sidebar-menu-btn');
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        
+        console.log('Elements found:', {
+            mobileMenuBtn: !!mobileMenuBtn,
+            mobileMenu: !!mobileMenu,
+            sidebarMenuBtn: !!sidebarMenuBtn,
+            mobileSidebar: !!mobileSidebar,
+            sidebarOverlay: !!sidebarOverlay,
+            closeSidebarBtn: !!closeSidebarBtn
+        });
+
+        // Manual test function for debugging
+        window.testSidebar = function() {
+            console.log('Testing sidebar manually...');
+            const sidebar = document.getElementById('mobile-sidebar');
+            if (sidebar) {
+                console.log('Sidebar found, current classes:', sidebar.className);
+                sidebar.classList.remove('hidden');
+                sidebar.style.display = 'flex';
+                sidebar.style.zIndex = '9999';
+                sidebar.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                console.log('Sidebar should now be visible');
+            } else {
+                console.log('Sidebar NOT found!');
+            }
+        };
+
+        // Toggle mobile navigation menu (user menu)
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function() {
+                if (mobileMenu) {
+                    mobileMenu.classList.toggle('hidden');
+                }
+            });
+        }
+
+        // Toggle mobile sidebar
+        if (sidebarMenuBtn) {
+            console.log('Sidebar menu button found');
+            sidebarMenuBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Sidebar toggle clicked');
+                
+                // Add a small delay to ensure DOM is ready
+                setTimeout(function() {
+                    const sidebar = document.getElementById('mobile-sidebar');
+                    if (sidebar) {
+                        console.log('Mobile sidebar found, showing...');
+                        console.log('Current sidebar classes before:', sidebar.className);
+                        sidebar.classList.remove('hidden');
+                        sidebar.style.display = 'flex';
+                        sidebar.style.zIndex = '9999';
+                        document.body.style.overflow = 'hidden';
+                        console.log('Current sidebar classes after:', sidebar.className);
+                    } else {
+                        console.log('Mobile sidebar not found!');
+                    }
+                }, 10);
+            });
+        } else {
+            console.log('Sidebar menu button NOT found!');
+        }
+
+        // Close sidebar function
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            if (sidebar) {
+                sidebar.classList.add('hidden');
+                sidebar.style.display = 'none';
+            }
+            document.body.style.overflow = '';
+        }
+
+        // Close sidebar when clicking overlay or close button
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeMobileSidebar);
+        }
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', closeMobileSidebar);
+        }
+
+        // Close sidebar when clicking links on mobile
+        const mobileNavLinks = document.querySelectorAll('#mobile-sidebar a');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                setTimeout(closeMobileSidebar, 150);
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (mobileMenu && !mobileMenu.contains(e.target) && !mobileMenuBtn?.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) {
+                if (mobileMenu) {
+                    mobileMenu.classList.add('hidden');
+                }
+                if (mobileSidebar) {
+                    mobileSidebar.classList.add('hidden');
+                }
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (mobileMenu) {
+                    mobileMenu.classList.add('hidden');
+                }
+                closeMobileSidebar();
+            }
+        });
+
+        // Manual test function for debugging
+        window.testSidebar = function() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            if (sidebar) {
+                console.log('Manual test: sidebar found');
+                sidebar.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                console.log('Manual test: sidebar NOT found');
+            }
+        };
+
+        console.log('You can test the sidebar manually by typing testSidebar() in the browser console');
     </script>
 </body>
 </html>

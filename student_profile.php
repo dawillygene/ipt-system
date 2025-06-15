@@ -271,6 +271,10 @@ $reg_number = $student['reg_number'] ?? '';
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Animate.css for better animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         /* Enhanced responsive design with proper layout */
         .main-layout {
@@ -412,6 +416,43 @@ $reg_number = $student['reg_number'] ?? '';
         
         .card-animation {
             animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Custom SweetAlert2 styling */
+        .swal2-popup {
+            border-radius: 12px;
+            font-family: inherit;
+        }
+
+        .swal2-title {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .swal2-html-container {
+            color: #374151;
+        }
+
+        /* Form validation styling */
+        .field-valid {
+            border-color: #10b981 !important;
+            background-color: #f0fdf4 !important;
+        }
+
+        .field-invalid {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+
+        /* Loading overlay */
+        .form-loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Profile completion progress */
+        .progress-ring {
+            transition: stroke-dasharray 0.5s ease;
         }
     </style>
 </head>
@@ -622,45 +663,78 @@ $reg_number = $student['reg_number'] ?? '';
             </nav>
         </div>
 
-        <!-- Error/Success Messages -->
+        <!-- SweetAlert2 Messages -->
         <?php if (!empty($errors)): ?>
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4" style="display: none;">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-red-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <ul class="list-disc pl-5 space-y-1">
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?php echo htmlspecialchars($error); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    let errorHtml = '<div class="text-left"><ul>';
+                    <?php foreach ($errors as $error): ?>
+                        errorHtml += '<li class="mb-2"><i class="fas fa-exclamation-circle text-red-500 mr-2"></i><?php echo addslashes(htmlspecialchars($error)); ?></li>';
+                    <?php endforeach; ?>
+                    errorHtml += '</ul></div>';
+                    
+                    Swal.fire({
+                        title: 'Validation Errors',
+                        html: errorHtml,
+                        icon: 'error',
+                        confirmButtonText: 'Fix Issues',
+                        confirmButtonColor: '#ef4444',
+                        showClass: {
+                            popup: 'animate__animated animate__shakeX'
+                        },
+                        customClass: {
+                            popup: 'swal2-popup',
+                            title: 'text-red-600 font-bold',
+                            htmlContainer: 'text-gray-700'
+                        }
+                    });
+                });
+            </script>
         <?php endif; ?>
 
         <?php if ($success): ?>
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4" style="display: none;">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-check-circle text-green-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-green-800"><?php echo htmlspecialchars($success); ?></p>
-                    </div>
-                </div>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: '<?php echo addslashes(htmlspecialchars($success)); ?>',
+                        icon: 'success',
+                        confirmButtonText: 'Great!',
+                        confirmButtonColor: '#10b981',
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        },
+                        customClass: {
+                            popup: 'swal2-popup',
+                            title: 'text-green-600 font-bold',
+                            htmlContainer: 'text-gray-700'
+                        }
+                    });
+                });
+            </script>
         <?php endif; ?>
 
         <!-- Profile Form -->
         <form id="profileForm" method="POST" action="" enctype="multipart/form-data" class="bg-white shadow-lg rounded-lg p-6">
             <input type="hidden" name="action" value="update_profile">
             
-            <!-- Completion Status will be inserted here by JavaScript -->
+            <!-- Profile Completion Status -->
+            <div id="completion-status" class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-blue-800">
+                        <i class="fas fa-chart-pie mr-2"></i>Profile Completion
+                    </h3>
+                    <span id="completion-percentage" class="text-2xl font-bold text-blue-600">0%</span>
+                </div>
+                
+                <div class="w-full bg-blue-200 rounded-full h-3 mb-3">
+                    <div id="completion-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                
+                <div id="completion-details" class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <!-- Completion details will be inserted by JavaScript -->
+                </div>
+            </div>
             
             <!-- Required Fields Notice -->
             <div class="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4">
@@ -846,6 +920,7 @@ $reg_number = $student['reg_number'] ?? '';
                                 Upload Profile Photo
                             </label>
                             <input type="file" id="profile_photo" name="profile_photo" accept="image/*"
+                                   data-existing="<?php echo !empty($student['profile_photo']) ? 'true' : 'false'; ?>"
                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-secondary">
                             <p class="mt-1 text-xs text-gray-500">PNG, JPG up to 2MB</p>
                         </div>
@@ -887,6 +962,7 @@ $reg_number = $student['reg_number'] ?? '';
                             <?php endif; ?>
                             
                             <input type="file" id="academic_transcript" name="academic_transcript" accept=".pdf,.doc,.docx"
+                                   data-existing="<?php echo !empty($student['academic_transcript']) ? 'true' : 'false'; ?>"
                                    class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
                         </div>
@@ -922,6 +998,7 @@ $reg_number = $student['reg_number'] ?? '';
                             <?php endif; ?>
                             
                             <input type="file" id="id_document" name="id_document" accept=".pdf,.jpg,.jpeg,.png"
+                                   data-existing="<?php echo !empty($student['id_document']) ? 'true' : 'false'; ?>"
                                    class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, JPG, PNG up to 5MB</p>
                         </div>
@@ -957,6 +1034,7 @@ $reg_number = $student['reg_number'] ?? '';
                             <?php endif; ?>
                             
                             <input type="file" id="cv_document" name="cv_document" accept=".pdf,.doc,.docx"
+                                   data-existing="<?php echo !empty($student['cv_document']) ? 'true' : 'false'; ?>"
                                    class="block w-full text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-white hover:file:bg-accent">
                             <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX up to 5MB</p>
                         </div>
@@ -982,6 +1060,364 @@ $reg_number = $student['reg_number'] ?? '';
     </div>
 
     <script>
+        // Comprehensive form validation and SweetAlert2 integration
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('profileForm');
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Real-time validation for all form fields
+            const fields = [
+                { id: 'full_name', rules: ['required', 'minLength:2'] },
+                { id: 'reg_number', rules: ['required', 'minLength:3'] },
+                { id: 'gender', rules: ['required'] },
+                { id: 'college_name', rules: ['required', 'minLength:2'] },
+                { id: 'department', rules: ['required', 'minLength:2'] },
+                { id: 'course_name', rules: ['required', 'minLength:2'] },
+                { id: 'program', rules: ['required'] },
+                { id: 'level', rules: ['required', 'minLength:1'] },
+                { id: 'year_of_study', rules: ['required', 'range:1:8'] },
+                { id: 'phone_number', rules: ['required', 'phone'] },
+                { id: 'address', rules: ['required', 'minLength:10'] },
+                { id: 'email', rules: ['required', 'email'] }
+            ];
+
+            // Validation functions
+            function validateField(field, value) {
+                const errors = [];
+                
+                field.rules.forEach(rule => {
+                    if (rule === 'required' && !value.trim()) {
+                        errors.push('This field is required');
+                    } else if (rule.startsWith('minLength:')) {
+                        const minLength = parseInt(rule.split(':')[1]);
+                        if (value.length < minLength) {
+                            errors.push(`Must be at least ${minLength} characters`);
+                        }
+                    } else if (rule.startsWith('range:')) {
+                        const [min, max] = rule.split(':').slice(1).map(Number);
+                        const num = parseInt(value);
+                        if (isNaN(num) || num < min || num > max) {
+                            errors.push(`Must be between ${min} and ${max}`);
+                        }
+                    } else if (rule === 'email' && value) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            errors.push('Please enter a valid email address');
+                        }
+                    } else if (rule === 'phone' && value) {
+                        const phoneRegex = /^[0-9+\-\s\(\)]{10,15}$/;
+                        if (!phoneRegex.test(value)) {
+                            errors.push('Please enter a valid phone number');
+                        }
+                    }
+                });
+                
+                return errors;
+            }
+
+            function updateFieldValidation(fieldElement, isValid) {
+                if (isValid) {
+                    fieldElement.classList.remove('field-invalid');
+                    fieldElement.classList.add('field-valid');
+                } else {
+                    fieldElement.classList.remove('field-valid');
+                    fieldElement.classList.add('field-invalid');
+                }
+            }
+
+            // Add real-time validation to all fields
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (element) {
+                    element.addEventListener('input', function() {
+                        const errors = validateField(field, this.value);
+                        updateFieldValidation(this, errors.length === 0);
+                    });
+                    
+                    element.addEventListener('blur', function() {
+                        const errors = validateField(field, this.value);
+                        if (errors.length > 0) {
+                            // Show tooltip with error message
+                            this.setAttribute('title', errors[0]);
+                        } else {
+                            this.removeAttribute('title');
+                        }
+                    });
+                }
+            });
+
+            // File upload validation
+            const fileInputs = ['profile_photo', 'academic_transcript', 'id_document', 'cv_document'];
+            fileInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('change', function() {
+                        const file = this.files[0];
+                        if (file) {
+                            let isValid = true;
+                            let errorMessage = '';
+                            
+                            // Size validation
+                            const maxSize = inputId === 'profile_photo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024; // 2MB for photos, 5MB for documents
+                            if (file.size > maxSize) {
+                                isValid = false;
+                                errorMessage = `File size must be less than ${maxSize / (1024 * 1024)}MB`;
+                            }
+                            
+                            // Type validation
+                            let allowedTypes = [];
+                            if (inputId === 'profile_photo') {
+                                allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                            } else if (inputId === 'id_document') {
+                                allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+                            } else {
+                                allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                            }
+                            
+                            if (!allowedTypes.includes(file.type)) {
+                                isValid = false;
+                                errorMessage = 'Invalid file type';
+                            }
+                            
+                            if (!isValid) {
+                                this.value = '';
+                                Swal.fire({
+                                    title: 'Invalid File',
+                                    text: errorMessage,
+                                    icon: 'error',
+                                    confirmButtonColor: '#ef4444'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Form submission with confirmation
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate all fields
+                let hasErrors = false;
+                const errors = [];
+                
+                fields.forEach(field => {
+                    const element = document.getElementById(field.id);
+                    if (element) {
+                        const fieldErrors = validateField(field, element.value);
+                        if (fieldErrors.length > 0) {
+                            hasErrors = true;
+                            errors.push(`${element.labels[0]?.textContent || field.id}: ${fieldErrors[0]}`);
+                            updateFieldValidation(element, false);
+                        }
+                    }
+                });
+                
+                if (hasErrors) {
+                    let errorHtml = '<div class="text-left"><ul>';
+                    errors.forEach(error => {
+                        errorHtml += `<li class="mb-2"><i class="fas fa-exclamation-circle text-red-500 mr-2"></i>${error}</li>`;
+                    });
+                    errorHtml += '</ul></div>';
+                    
+                    Swal.fire({
+                        title: 'Please Fix Validation Errors',
+                        html: errorHtml,
+                        icon: 'error',
+                        confirmButtonText: 'Fix Issues',
+                        confirmButtonColor: '#ef4444',
+                        showClass: {
+                            popup: 'animate__animated animate__shakeX'
+                        }
+                    });
+                    return;
+                }
+                
+                // Show confirmation dialog
+                Swal.fire({
+                    title: 'Update Profile?',
+                    text: 'Are you sure you want to save these changes to your profile?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Save Changes',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6b7280',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        Swal.fire({
+                            title: 'Saving Profile...',
+                            text: 'Please wait while we update your information.',
+                            icon: 'info',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        // Add loading state to form
+                        form.classList.add('form-loading');
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+                        
+                        // Submit the form
+                        form.submit();
+                    }
+                });
+            });
+
+            // Profile completion tracking
+            function updateProfileCompletion() {
+                const requiredFields = [
+                    'full_name', 'reg_number', 'gender', 'college_name', 
+                    'department', 'course_name', 'program', 'level', 
+                    'year_of_study', 'phone_number', 'address', 'email'
+                ];
+                
+                const sections = {
+                    'Personal': ['full_name', 'reg_number', 'gender'],
+                    'Academic': ['college_name', 'department', 'course_name', 'program', 'level', 'year_of_study'],
+                    'Contact': ['phone_number', 'address', 'email'],
+                    'Documents': ['profile_photo', 'academic_transcript', 'id_document', 'cv_document']
+                };
+                
+                let completedFields = 0;
+                let totalFields = requiredFields.length;
+                
+                // Check required fields
+                requiredFields.forEach(fieldId => {
+                    const element = document.getElementById(fieldId);
+                    if (element && element.value.trim()) {
+                        completedFields++;
+                    }
+                });
+                
+                // Check documents (optional but add to completion)
+                let documentCount = 0;
+                ['profile_photo', 'academic_transcript', 'id_document', 'cv_document'].forEach(docId => {
+                    const element = document.getElementById(docId);
+                    if (element && element.files && element.files.length > 0) {
+                        documentCount++;
+                    } else {
+                        // Check if document already exists (from PHP)
+                        const existingDoc = element && element.getAttribute('data-existing');
+                        if (existingDoc) {
+                            documentCount++;
+                        }
+                    }
+                });
+                
+                // Add documents to completion (25% weight for documents)
+                const documentScore = (documentCount / 4) * 3; // 3 points max for documents
+                const totalScore = completedFields + documentScore;
+                const maxScore = totalFields + 3;
+                const percentage = Math.round((totalScore / maxScore) * 100);
+                
+                // Update UI
+                document.getElementById('completion-percentage').textContent = percentage + '%';
+                document.getElementById('completion-bar').style.width = percentage + '%';
+                
+                // Update section details
+                let detailsHtml = '';
+                Object.entries(sections).forEach(([sectionName, fieldIds]) => {
+                    let sectionCompleted = 0;
+                    let sectionTotal = fieldIds.length;
+                    
+                    fieldIds.forEach(fieldId => {
+                        const element = document.getElementById(fieldId);
+                        if (element) {
+                            if (sectionName === 'Documents') {
+                                if ((element.files && element.files.length > 0) || element.getAttribute('data-existing')) {
+                                    sectionCompleted++;
+                                }
+                            } else if (element.value.trim()) {
+                                sectionCompleted++;
+                            }
+                        }
+                    });
+                    
+                    const sectionPercentage = Math.round((sectionCompleted / sectionTotal) * 100);
+                    const iconClass = sectionPercentage === 100 ? 'fas fa-check-circle text-green-500' : 
+                                     sectionPercentage > 50 ? 'fas fa-clock text-yellow-500' : 'fas fa-exclamation-circle text-red-500';
+                    
+                    detailsHtml += `
+                        <div class="flex items-center space-x-2">
+                            <i class="${iconClass}"></i>
+                            <span class="text-gray-700">${sectionName}: ${sectionCompleted}/${sectionTotal}</span>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('completion-details').innerHTML = detailsHtml;
+                
+                // Change completion bar color based on percentage
+                const bar = document.getElementById('completion-bar');
+                if (percentage === 100) {
+                    bar.className = 'bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500';
+                } else if (percentage >= 75) {
+                    bar.className = 'bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500';
+                } else if (percentage >= 50) {
+                    bar.className = 'bg-gradient-to-r from-yellow-500 to-orange-500 h-3 rounded-full transition-all duration-500';
+                } else {
+                    bar.className = 'bg-gradient-to-r from-red-500 to-red-600 h-3 rounded-full transition-all duration-500';
+                }
+            }
+            
+            // Initialize completion tracking
+            updateProfileCompletion();
+            
+            // Update completion when fields change
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (element) {
+                    element.addEventListener('input', updateProfileCompletion);
+                }
+            });
+            
+            // Update completion when files are uploaded
+            fileInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('change', updateProfileCompletion);
+                }
+            });
+
+            // Welcome message for new users (if profile is mostly empty)
+            const isNewUser = !document.getElementById('full_name').value.trim() || 
+                            !document.getElementById('reg_number').value.trim();
+            
+            if (isNewUser) {
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'Welcome to Your Profile!',
+                        html: `
+                            <div class="text-left">
+                                <p class="mb-3">Complete your profile to get the most out of the IPT System:</p>
+                                <ul class="text-sm space-y-2">
+                                    <li><i class="fas fa-check text-green-500 mr-2"></i>Fill in all personal and academic details</li>
+                                    <li><i class="fas fa-check text-green-500 mr-2"></i>Upload required documents</li>
+                                    <li><i class="fas fa-check text-green-500 mr-2"></i>Keep your contact information current</li>
+                                    <li><i class="fas fa-check text-green-500 mr-2"></i>Add a professional profile photo</li>
+                                </ul>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Get Started',
+                        confirmButtonColor: '#10b981',
+                        showClass: {
+                            popup: 'animate__animated animate__bounceIn'
+                        }
+                    });
+                }, 1000);
+            }
+        });
+
         // Tab functionality - restore the removed JavaScript for tabs
         document.addEventListener('DOMContentLoaded', function() {
             const tabLinks = document.querySelectorAll('.tab-link');
@@ -1020,6 +1456,55 @@ $reg_number = $student['reg_number'] ?? '';
                     const targetId = this.getAttribute('href').substring(1);
                     showTab(targetId);
                 });
+            });
+        });
+
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+                
+                // Close mobile menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+
+        // Form auto-save notification (optional enhancement)
+        let autoSaveTimer;
+        function showAutoSaveNotification() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const toast = Swal.mixin({
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                
+                toast.fire({
+                    icon: 'info',
+                    title: 'Remember to save your changes!',
+                    background: '#f3f4f6',
+                    color: '#374151'
+                });
+            }, 30000); // Show reminder after 30 seconds of inactivity
+        }
+        
+        // Trigger auto-save notification on form changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const formElements = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea');
+            formElements.forEach(element => {
+                element.addEventListener('input', showAutoSaveNotification);
             });
         });
     </script>

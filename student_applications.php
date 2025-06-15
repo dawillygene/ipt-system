@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submitted_at = ($action === 'submit') ? date('Y-m-d H:i:s') : null;
 
         // Check if application already exists for this student
-        $check_stmt = $con->prepare("SELECT application_id FROM applications WHERE student_id = ?");
+        $check_stmt = $con->prepare("SELECT id FROM applications WHERE student_id = ?");
         $check_stmt->bind_param("i", $student_id);
         $check_stmt->execute();
         $existing = $check_stmt->get_result()->fetch_assoc();
@@ -162,6 +162,10 @@ $stmt->close();
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Animate.css for better animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         /* Enhanced responsive design with proper layout */
         .main-layout {
@@ -179,6 +183,17 @@ $stmt->close();
             min-width: 0; /* Prevents flex child from overflowing */
             display: flex;
             flex-direction: column;
+        }
+        
+        /* Desktop optimizations */
+        @media (min-width: 1024px) {
+            .main-content {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+            .content-container {
+                margin-left: 0 !important;
+            }
         }
         
         /* Mobile responsive adjustments */
@@ -201,6 +216,10 @@ $stmt->close();
             /* Compact navbar */
             nav .h-16 {
                 height: 2.75rem;
+            }
+            /* Mobile form adjustments */
+            .grid.lg\\:grid-cols-2 {
+                grid-template-columns: 1fr !important;
             }
         }
 
@@ -229,6 +248,84 @@ $stmt->close();
             .navbar-brand {
                 font-size: 0.8rem;
             }
+        }
+
+        /* Form stability - no animations or movements */
+        .form-section, 
+        form,
+        .bg-gray-50,
+        .bg-white {
+            position: static !important;
+            transform: none !important;
+            transition: none !important;
+        }
+        
+        /* Remove all hover effects that cause movement */
+        .form-section:hover,
+        .bg-gray-50:hover,
+        input:hover,
+        select:hover,
+        textarea:hover,
+        button:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Stable focus states without movement */
+        input:focus, select:focus, textarea:focus {
+            outline: 2px solid #07442d;
+            outline-offset: 1px;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        
+        /* Completely disable all transitions */
+        * {
+            transition: none !important;
+            animation: none !important;
+        }
+
+        /* Custom SweetAlert2 styling */
+        .swal2-popup {
+            border-radius: 12px;
+            font-family: inherit;
+        }
+
+        .swal2-title {
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .swal2-html-container {
+            color: #374151;
+        }
+
+        /* Form validation styling */
+        .field-valid {
+            border-color: #10b981 !important;
+            background-color: #f0fdf4 !important;
+        }
+
+        .field-invalid {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+
+        /* Loading overlay */
+        .form-loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Success animation for character counter */
+        .char-count-success {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         /* Improved scrollbar for mobile sidebar */
@@ -444,41 +541,38 @@ $stmt->close();
         <?php include 'includes/student_sidebar.php'; ?>
 
         <!-- Main Content Area with scrollable content -->
-        <div class="flex flex-col flex-1 min-h-0">
-            <main class="flex-1 overflow-y-auto bg-gray-50">
-                <!-- Page Header -->
-                <div class="flex-shrink-0 main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4 bg-white border-b border-gray-200">
-                    <div class="page-header">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <div class="mb-3 sm:mb-0">
-                                <div class="flex items-center">
-                                    <div>
-                                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                                            Training Application
-                                        </h1>
-                                        <p class="text-xs sm:text-sm text-gray-600">
-                                            Apply for Industrial Practical Training placement
-                                        </p>
-                                    </div>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Page Header - Fixed -->
+            <div class="flex-shrink-0 main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4 bg-white border-b border-gray-200">
+                <div class="page-header">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div class="mb-3 sm:mb-0">
+                            <div class="flex items-center">
+                                <div>
+                                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                                        Training Application
+                                    </h1>
+                                    <p class="text-xs sm:text-sm text-gray-600">
+                                        Apply for Industrial Practical Training placement
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Scrollable Content Area -->
-                <div class="flex-1 overflow-y-auto bg-gray-50">
-                    <div class="main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-                        <!-- Main Content -->
-                        <div class="max-w-4xl mx-auto">
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto bg-gray-50">
+                <div class="main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
 
                         <!-- Application Status -->
                         <?php if ($existing_application): ?>
-                            <div class="mb-6 bg-white rounded-lg shadow p-6">
+                            <div class="mb-3 bg-white rounded-lg shadow p-3">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h3 class="text-lg font-medium text-gray-900">Application Status</h3>
-                                        <p class="text-sm text-gray-600">Current status of your training application</p>
+                                        <h3 class="text-base font-medium text-gray-900">Application Status</h3>
+                                        <p class="text-xs text-gray-600">Current status of your training application</p>
                                     </div>
                                     <div class="flex items-center">
                                         <?php
@@ -498,233 +592,237 @@ $stmt->close();
                                             'rejected' => 'fas fa-times-circle'
                                         ];
                                         ?>
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <?php echo $status_colors[$status]; ?>">
-                                            <i class="<?php echo $status_icons[$status]; ?> mr-2"></i>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?php echo $status_colors[$status]; ?>">
+                                            <i class="<?php echo $status_icons[$status]; ?> mr-1"></i>
                                             <?php echo ucfirst(str_replace('_', ' ', $status)); ?>
                                         </span>
                                     </div>
                                 </div>
                                 <?php if ($existing_application['submitted_at']): ?>
-                                    <p class="mt-2 text-sm text-gray-500">
-                                        Submitted on <?php echo date('F j, Y \a\t g:i A', strtotime($existing_application['submitted_at'])); ?>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        Submitted on <?php echo date('M j, Y \a\t g:i A', strtotime($existing_application['submitted_at'])); ?>
                                     </p>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
                         
-                        <!-- Error/Success Messages -->
+                        <!-- Error/Success Messages (Hidden - Using SweetAlert) -->
                         <?php if (!empty($errors)): ?>
-                            <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-exclamation-triangle text-red-400"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
-                                        <div class="mt-2 text-sm text-red-700">
-                                            <ul class="list-disc pl-5 space-y-1">
-                                                <?php foreach ($errors as $error): ?>
-                                                    <li><?php echo htmlspecialchars($error); ?></li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    let errorMessages = <?php echo json_encode($errors); ?>;
+                                    let errorHtml = '<ul style="text-align: left; margin: 0; padding-left: 20px;">';
+                                    errorMessages.forEach(function(error) {
+                                        errorHtml += '<li>' + error + '</li>';
+                                    });
+                                    errorHtml += '</ul>';
+                                    
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Validation Errors',
+                                        html: errorHtml,
+                                        confirmButtonText: 'Fix Errors',
+                                        confirmButtonColor: '#ef4444',
+                                        showClass: {
+                                            popup: 'animate__animated animate__fadeInDown'
+                                        },
+                                        hideClass: {
+                                            popup: 'animate__animated animate__fadeOutUp'
+                                        }
+                                    });
+                                });
+                            </script>
                         <?php endif; ?>
 
                         <?php if ($success): ?>
-                            <div class="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-                                <div class="flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-check-circle text-green-400"></i>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-green-800"><?php echo htmlspecialchars($success); ?></p>
-                                    </div>
-                                </div>
-                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success!',
+                                        text: '<?php echo addslashes($success); ?>',
+                                        confirmButtonText: 'Great!',
+                                        confirmButtonColor: '#07442d',
+                                        timer: 3000,
+                                        timerProgressBar: true,
+                                        showClass: {
+                                            popup: 'animate__animated animate__fadeInDown'
+                                        },
+                                        hideClass: {
+                                            popup: 'animate__animated animate__fadeOutUp'
+                                        }
+                                    });
+                                });
+                            </script>
                         <?php endif; ?>
 
                         <!-- Application Form -->
                         <form method="POST" action="" id="applicationForm" class="bg-white shadow-lg rounded-lg p-6">
-            <!-- Company Information -->
-            <div class="mb-8">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="company_name" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-building mr-1 text-primary"></i>Company Name *
-                        </label>
-                        <input type="text" id="company_name" name="company_name" required
-                               value="<?php echo htmlspecialchars($existing_application['company_name'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
+                            <!-- Form Header -->
+                            <div class="mb-6 pb-4 border-b border-gray-200">
+                                <h2 class="text-2xl font-bold text-gray-900">Training Application</h2>
+                                <p class="text-sm text-gray-600">Complete required fields to submit your IPT application</p>
+                            </div>
 
-                    <div>
-                        <label for="company_location" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-map-marker-alt mr-1 text-primary"></i>Company Location *
-                        </label>
-                        <input type="text" id="company_location" name="company_location" required
-                               value="<?php echo htmlspecialchars($existing_application['company_location'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
+                            <!-- Compact Single Column Layout -->
+                            <div class="space-y-6">
+                                <!-- Company & Training Details in One Section -->
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-building mr-2 text-primary"></i>
+                                        Company & Training Details
+                                    </h3>
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <label for="company_name" class="block text-sm font-medium text-gray-700 mb-1">Company Name *</label>
+                                            <input type="text" id="company_name" name="company_name" required
+                                                   value="<?php echo htmlspecialchars($existing_application['company_name'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                        <div>
+                                            <label for="company_location" class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                                            <input type="text" id="company_location" name="company_location" required
+                                                   value="<?php echo htmlspecialchars($existing_application['company_location'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                        <div>
+                                            <label for="position_title" class="block text-sm font-medium text-gray-700 mb-1">Position/Role *</label>
+                                            <input type="text" id="position_title" name="position_title" required
+                                                   value="<?php echo htmlspecialchars($existing_application['position_title'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Training Area and Period -->
+                                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
+                                        <div>
+                                            <label for="training_area" class="block text-sm font-medium text-gray-700 mb-1">Training Area *</label>
+                                            <select id="training_area" name="training_area" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option value="">Select Area</option>
+                                                <option value="Software Development" <?php echo ($existing_application['training_area'] ?? '') === 'Software Development' ? 'selected' : ''; ?>>Software Development</option>
+                                                <option value="Web Development" <?php echo ($existing_application['training_area'] ?? '') === 'Web Development' ? 'selected' : ''; ?>>Web Development</option>
+                                                <option value="Network Administration" <?php echo ($existing_application['training_area'] ?? '') === 'Network Administration' ? 'selected' : ''; ?>>Network Admin</option>
+                                                <option value="Database Management" <?php echo ($existing_application['training_area'] ?? '') === 'Database Management' ? 'selected' : ''; ?>>Database</option>
+                                                <option value="Cyber Security" <?php echo ($existing_application['training_area'] ?? '') === 'Cyber Security' ? 'selected' : ''; ?>>Cyber Security</option>
+                                                <option value="Mobile App Development" <?php echo ($existing_application['training_area'] ?? '') === 'Mobile App Development' ? 'selected' : ''; ?>>Mobile Dev</option>
+                                                <option value="IT Support" <?php echo ($existing_application['training_area'] ?? '') === 'IT Support' ? 'selected' : ''; ?>>IT Support</option>
+                                                <option value="Data Analysis" <?php echo ($existing_application['training_area'] ?? '') === 'Data Analysis' ? 'selected' : ''; ?>>Data Analysis</option>
+                                                <option value="Other" <?php echo ($existing_application['training_area'] ?? '') === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="training_duration" class="block text-sm font-medium text-gray-700 mb-1">Duration (weeks) *</label>
+                                            <select id="training_duration" name="training_duration" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                                <option value="">Duration</option>
+                                                <?php for ($i = 1; $i <= 24; $i++): ?>
+                                                    <option value="<?php echo $i; ?>" <?php echo ($existing_application['training_duration'] ?? '') == $i ? 'selected' : ''; ?>><?php echo $i; ?> week<?php echo $i > 1 ? 's' : ''; ?></option>
+                                                <?php endfor; ?>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                            <input type="date" id="start_date" name="start_date" required
+                                                   value="<?php echo htmlspecialchars($existing_application['start_date'] ?? ''); ?>"
+                                                   min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                        <div>
+                                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                                            <input type="date" id="end_date" name="end_date" required
+                                                   value="<?php echo htmlspecialchars($existing_application['end_date'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <div>
-                        <label for="position_title" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-briefcase mr-1 text-primary"></i>Position/Role *
-                        </label>
-                        <input type="text" id="position_title" name="position_title" required
-                               value="<?php echo htmlspecialchars($existing_application['position_title'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
+                                <!-- Alternative Companies - Compact -->
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-list-alt mr-2 text-primary"></i>
+                                        Alternative Company Preferences
+                                    </h3>
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                        <div>
+                                            <label for="preferred_company1" class="block text-sm font-medium text-gray-700 mb-1">Second Choice</label>
+                                            <input type="text" id="preferred_company1" name="preferred_company1"
+                                                   value="<?php echo htmlspecialchars($existing_application['preferred_company1'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                        <div>
+                                            <label for="preferred_company2" class="block text-sm font-medium text-gray-700 mb-1">Third Choice</label>
+                                            <input type="text" id="preferred_company2" name="preferred_company2"
+                                                   value="<?php echo htmlspecialchars($existing_application['preferred_company2'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                        <div>
+                                            <label for="preferred_company3" class="block text-sm font-medium text-gray-700 mb-1">Fourth Choice</label>
+                                            <input type="text" id="preferred_company3" name="preferred_company3"
+                                                   value="<?php echo htmlspecialchars($existing_application['preferred_company3'] ?? ''); ?>"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <div>
-                        <label for="training_area" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-tools mr-1 text-primary"></i>Training Area *
-                        </label>
-                        <select id="training_area" name="training_area" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="">Select Training Area</option>
-                            <option value="Software Development" <?php echo ($existing_application['training_area'] ?? '') === 'Software Development' ? 'selected' : ''; ?>>Software Development</option>
-                            <option value="Network Administration" <?php echo ($existing_application['training_area'] ?? '') === 'Network Administration' ? 'selected' : ''; ?>>Network Administration</option>
-                            <option value="Database Management" <?php echo ($existing_application['training_area'] ?? '') === 'Database Management' ? 'selected' : ''; ?>>Database Management</option>
-                            <option value="Cyber Security" <?php echo ($existing_application['training_area'] ?? '') === 'Cyber Security' ? 'selected' : ''; ?>>Cyber Security</option>
-                            <option value="Web Development" <?php echo ($existing_application['training_area'] ?? '') === 'Web Development' ? 'selected' : ''; ?>>Web Development</option>
-                            <option value="Mobile App Development" <?php echo ($existing_application['training_area'] ?? '') === 'Mobile App Development' ? 'selected' : ''; ?>>Mobile App Development</option>
-                            <option value="IT Support" <?php echo ($existing_application['training_area'] ?? '') === 'IT Support' ? 'selected' : ''; ?>>IT Support</option>
-                            <option value="Data Analysis" <?php echo ($existing_application['training_area'] ?? '') === 'Data Analysis' ? 'selected' : ''; ?>>Data Analysis</option>
-                            <option value="Other" <?php echo ($existing_application['training_area'] ?? '') === 'Other' ? 'selected' : ''; ?>>Other</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+                                <!-- Skills and Motivation - Compact -->
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-lightbulb mr-2 text-primary"></i>
+                                        Skills & Motivation
+                                    </h3>
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div>
+                                            <label for="skills_to_acquire" class="block text-sm font-medium text-gray-700 mb-1">Skills to Acquire</label>
+                                            <textarea id="skills_to_acquire" name="skills_to_acquire" rows="4"
+                                                      placeholder="List skills you want to gain..."
+                                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"><?php echo htmlspecialchars($existing_application['skills_to_acquire'] ?? ''); ?></textarea>
+                                        </div>
+                                        <div>
+                                            <label for="motivation_letter" class="block text-sm font-medium text-gray-700 mb-1">Motivation Letter *</label>
+                                            <textarea id="motivation_letter" name="motivation_letter" rows="4" required
+                                                      placeholder="Why this company? Your goals? (min 100 chars)"
+                                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none"><?php echo htmlspecialchars($existing_application['motivation_letter'] ?? ''); ?></textarea>
+                                            <p class="text-sm text-gray-500 mt-1">
+                                                Character count: <span id="char-count" class="font-medium">0</span> / 100 minimum
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-            <!-- Training Period -->
-            <div class="mb-8">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Training Period</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label for="training_duration" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-calendar-alt mr-1 text-primary"></i>Duration (weeks) *
-                        </label>
-                        <select id="training_duration" name="training_duration" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="">Select Duration</option>
-                            <?php for ($i = 1; $i <= 52; $i++): ?>
-                                <option value="<?php echo $i; ?>" <?php echo ($existing_application['training_duration'] ?? '') == $i ? 'selected' : ''; ?>><?php echo $i; ?> week<?php echo $i > 1 ? 's' : ''; ?></option>
-                            <?php endfor; ?>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-calendar-plus mr-1 text-primary"></i>Start Date *
-                        </label>
-                        <input type="date" id="start_date" name="start_date" required
-                               value="<?php echo htmlspecialchars($existing_application['start_date'] ?? ''); ?>"
-                               min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-calendar-minus mr-1 text-primary"></i>End Date *
-                        </label>
-                        <input type="date" id="end_date" name="end_date" required
-                               value="<?php echo htmlspecialchars($existing_application['end_date'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Skills and Motivation -->
-            <div class="mb-8">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Skills & Motivation</h3>
-                <div class="space-y-6">
-                    <div>
-                        <label for="skills_to_acquire" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-lightbulb mr-1 text-primary"></i>Skills You Want to Acquire
-                        </label>
-                        <textarea id="skills_to_acquire" name="skills_to_acquire" rows="3"
-                                  placeholder="List the specific skills and knowledge you hope to gain during this training..."
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"><?php echo htmlspecialchars($existing_application['skills_to_acquire'] ?? ''); ?></textarea>
-                    </div>
-
-                    <div>
-                        <label for="motivation_letter" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-heart mr-1 text-primary"></i>Motivation Letter *
-                        </label>
-                        <textarea id="motivation_letter" name="motivation_letter" rows="6" required
-                                  placeholder="Explain why you want to do your industrial training at this company, what you hope to achieve, and how it relates to your career goals... (minimum 100 characters)"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"><?php echo htmlspecialchars($existing_application['motivation_letter'] ?? ''); ?></textarea>
-                        <p class="mt-1 text-sm text-gray-500">
-                            Character count: <span id="char-count">0</span> / 100 minimum
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Alternative Companies -->
-            <div class="mb-8">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Alternative Company Preferences</h3>
-                <p class="text-sm text-gray-600 mb-4">List alternative companies in case your first choice is not available</p>
-                <div class="space-y-4">
-                    <div>
-                        <label for="preferred_company1" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-star mr-1 text-primary"></i>Second Choice Company
-                        </label>
-                        <input type="text" id="preferred_company1" name="preferred_company1"
-                               value="<?php echo htmlspecialchars($existing_application['preferred_company1'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label for="preferred_company2" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-star-half-alt mr-1 text-primary"></i>Third Choice Company
-                        </label>
-                        <input type="text" id="preferred_company2" name="preferred_company2"
-                               value="<?php echo htmlspecialchars($existing_application['preferred_company2'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-
-                    <div>
-                        <label for="preferred_company3" class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class="fas fa-star mr-1 text-gray-400"></i>Fourth Choice Company
-                        </label>
-                        <input type="text" id="preferred_company3" name="preferred_company3"
-                               value="<?php echo htmlspecialchars($existing_application['preferred_company3'] ?? ''); ?>"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="pt-6 border-t border-gray-200">
-                <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-                    <a href="student_dashboard.php" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-center">
-                        Cancel
-                    </a>
-                    <button type="submit" name="action" value="save_draft" 
-                            class="px-6 py-2 border border-secondary text-secondary rounded-md hover:bg-secondary hover:text-white transition-colors">
-                        <i class="fas fa-save mr-2"></i>Save as Draft
-                    </button>
-                    <button type="submit" name="action" value="submit" 
-                            class="px-6 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                        <i class="fas fa-paper-plane mr-2"></i>Submit Application
-                    </button>
-                </div>
-            </div>
+                            <!-- Action Buttons -->
+                            <div class="mt-8 pt-6 border-t border-gray-200">
+                                <div class="flex flex-col sm:flex-row justify-between items-center">
+                                    <div class="text-sm text-gray-500 mb-4 sm:mb-0">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Your information is secure and will be reviewed by our team
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <a href="student_dashboard.php" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white text-center">
+                                            <i class="fas fa-times mr-2"></i>Cancel
+                                        </a>
+                                        <button type="submit" name="action" value="save_draft" 
+                                                class="px-6 py-2 border border-secondary text-secondary rounded-md bg-white">
+                                            <i class="fas fa-save mr-2"></i>Save as Draft
+                                        </button>
+                                        <button type="submit" name="action" value="submit" 
+                                                class="px-8 py-2 bg-primary text-white rounded-md font-medium">
+                                            <i class="fas fa-paper-plane mr-2"></i>Submit Application
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
     <!-- JavaScript for form functionality -->
     <script>
-        // Form enhancements
+        // Form enhancements with SweetAlert2 integration
         document.addEventListener('DOMContentLoaded', function() {
             // Mobile menu toggle
             const mobileMenuButton = document.querySelector('label[for="mobile-sidebar-toggle"]');
@@ -736,17 +834,28 @@ $stmt->close();
                     // The sidebar functionality is handled by the checkbox
                 });
             }
+            
             const motivationLetter = document.getElementById('motivation_letter');
             const charCount = document.getElementById('char-count');
             const startDate = document.getElementById('start_date');
             const endDate = document.getElementById('end_date');
             const duration = document.getElementById('training_duration');
+            const form = document.getElementById('applicationForm');
 
-            // Character counter
+            // Character counter with real-time validation
             function updateCharCount() {
                 const count = motivationLetter.value.length;
                 charCount.textContent = count;
-                charCount.className = count >= 100 ? 'text-green-600' : 'text-red-600';
+                
+                if (count >= 100) {
+                    charCount.className = 'font-medium text-green-600';
+                    motivationLetter.classList.remove('border-red-300');
+                    motivationLetter.classList.add('border-green-300');
+                } else {
+                    charCount.className = 'font-medium text-red-600';
+                    motivationLetter.classList.remove('border-green-300');
+                    motivationLetter.classList.add('border-red-300');
+                }
             }
 
             motivationLetter.addEventListener('input', updateCharCount);
@@ -759,24 +868,258 @@ $stmt->close();
                     const weeks = parseInt(duration.value);
                     const end = new Date(start.getTime() + (weeks * 7 * 24 * 60 * 60 * 1000));
                     endDate.value = end.toISOString().split('T')[0];
+                    
+                    // Show success message for auto-calculation
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'End Date Calculated',
+                        text: `Training will end on ${end.toLocaleDateString()}`,
+                        timer: 2000,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
                 }
             }
 
             startDate.addEventListener('change', calculateEndDate);
             duration.addEventListener('change', calculateEndDate);
 
-            // Form validation before submission
-            document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            // Real-time field validation
+            function validateField(field, validationFn, errorMessage) {
+                field.addEventListener('blur', function() {
+                    if (!validationFn(field.value)) {
+                        field.classList.add('border-red-300', 'bg-red-50');
+                        field.classList.remove('border-green-300', 'bg-green-50');
+                        
+                        // Show validation error toast
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Invalid Input',
+                            text: errorMessage,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                    } else {
+                        field.classList.remove('border-red-300', 'bg-red-50');
+                        field.classList.add('border-green-300', 'bg-green-50');
+                    }
+                });
+            }
+
+            // Apply validation to required fields
+            validateField(document.getElementById('company_name'), 
+                value => value.trim().length >= 2, 
+                'Company name must be at least 2 characters long'
+            );
+
+            validateField(document.getElementById('company_location'), 
+                value => value.trim().length >= 2, 
+                'Company location must be at least 2 characters long'
+            );
+
+            validateField(document.getElementById('position_title'), 
+                value => value.trim().length >= 2, 
+                'Position title must be at least 2 characters long'
+            );
+
+            validateField(document.getElementById('training_area'), 
+                value => value !== '', 
+                'Please select a training area'
+            );
+
+            validateField(document.getElementById('training_duration'), 
+                value => parseInt(value) >= 1, 
+                'Please select a valid training duration'
+            );
+
+            validateField(startDate, 
+                value => {
+                    if (!value) return false;
+                    const selected = new Date(value);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return selected >= tomorrow;
+                }, 
+                'Start date must be at least tomorrow'
+            );
+
+            validateField(motivationLetter, 
+                value => value.trim().length >= 100, 
+                'Motivation letter must be at least 100 characters long'
+            );
+
+            // Enhanced form validation before submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Always prevent default first
+                
                 const action = e.submitter.value;
+                const formData = new FormData(form);
+                
+                // Collect validation errors
+                let validationErrors = [];
+                
                 if (action === 'submit') {
-                    if (motivationLetter.value.length < 100) {
-                        e.preventDefault();
-                        alert('Motivation letter must be at least 100 characters long.');
-                        motivationLetter.focus();
-                        return false;
+                    // Check required fields for submission
+                    if (!formData.get('company_name').trim()) {
+                        validationErrors.push('Company name is required');
+                    }
+                    if (!formData.get('company_location').trim()) {
+                        validationErrors.push('Company location is required');
+                    }
+                    if (!formData.get('position_title').trim()) {
+                        validationErrors.push('Position title is required');
+                    }
+                    if (!formData.get('training_area')) {
+                        validationErrors.push('Training area is required');
+                    }
+                    if (!formData.get('training_duration') || parseInt(formData.get('training_duration')) < 1) {
+                        validationErrors.push('Training duration must be at least 1 week');
+                    }
+                    if (!formData.get('start_date')) {
+                        validationErrors.push('Start date is required');
+                    }
+                    if (!formData.get('end_date')) {
+                        validationErrors.push('End date is required');
+                    }
+                    if (!formData.get('motivation_letter').trim()) {
+                        validationErrors.push('Motivation letter is required');
+                    } else if (formData.get('motivation_letter').trim().length < 100) {
+                        validationErrors.push('Motivation letter must be at least 100 characters long');
+                    }
+
+                    // Date validation
+                    const startDateValue = formData.get('start_date');
+                    const endDateValue = formData.get('end_date');
+                    
+                    if (startDateValue && endDateValue) {
+                        const start = new Date(startDateValue);
+                        const end = new Date(endDateValue);
+                        const today = new Date();
+                        
+                        if (start <= today) {
+                            validationErrors.push('Start date must be in the future');
+                        }
+                        if (end <= start) {
+                            validationErrors.push('End date must be after start date');
+                        }
                     }
                 }
+
+                // Show validation errors if any
+                if (validationErrors.length > 0) {
+                    let errorHtml = '<ul style="text-align: left; margin: 0; padding-left: 20px;">';
+                    validationErrors.forEach(function(error) {
+                        errorHtml += '<li>' + error + '</li>';
+                    });
+                    errorHtml += '</ul>';
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Please Fix These Issues',
+                        html: errorHtml,
+                        confirmButtonText: 'Fix Issues',
+                        confirmButtonColor: '#ef4444',
+                        showClass: {
+                            popup: 'animate__animated animate__shakeX'
+                        }
+                    });
+                    return false;
+                }
+
+                // Show confirmation dialog before submission
+                if (action === 'submit') {
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Submit Application?',
+                        text: 'Are you sure you want to submit your training application? You can still edit it later if needed.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Submit!',
+                        cancelButtonText: 'Review Again',
+                        confirmButtonColor: '#07442d',
+                        cancelButtonColor: '#6b7280',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Submitting Application...',
+                                text: 'Please wait while we process your application',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Submit the form
+                            form.submit();
+                        }
+                    });
+                } else if (action === 'save_draft') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Save as Draft?',
+                        text: 'Your application will be saved and you can continue editing it later.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Save Draft',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#206f56',
+                        cancelButtonColor: '#6b7280'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Saving Draft...',
+                                text: 'Please wait while we save your draft',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                allowEnterKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Submit the form
+                            form.submit();
+                        }
+                    });
+                }
             });
+
+            // Show welcome message if first time visiting
+            <?php if (!$existing_application): ?>
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Welcome to Training Applications',
+                    html: `
+                        <div style="text-align: left;">
+                            <p><strong>Steps to complete your application:</strong></p>
+                            <ol style="margin: 10px 0; padding-left: 20px;">
+                                <li>Fill in company and training details</li>
+                                <li>Add alternative company preferences (optional)</li>
+                                <li>Write your motivation letter (minimum 100 characters)</li>
+                                <li>Save as draft or submit directly</li>
+                            </ol>
+                            <p style="color: #07442d; font-weight: bold;">💡 Tip: You can save drafts and edit them later!</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Start Application',
+                    confirmButtonColor: '#07442d',
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown'
+                    }
+                });
+            }, 1000);
+            <?php endif; ?>
         });
     </script>
 </body>

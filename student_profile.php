@@ -257,7 +257,6 @@ $reg_number = $student['reg_number'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Profile - IPT System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -273,22 +272,37 @@ $reg_number = $student['reg_number'] ?? '';
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Enhanced responsive design with static sidebar */
-        @media (max-width: 1024px) {
-            .main-content {
-                padding: 1rem;
-            }
+        /* Enhanced responsive design with proper layout */
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
         }
-
+        
+        .sidebar-container {
+            flex-shrink: 0;
+            width: 256px; /* w-64 in Tailwind */
+        }
+        
+        .content-container {
+            flex: 1;
+            min-width: 0; /* Prevents flex child from overflowing */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Mobile responsive adjustments */
         @media (max-width: 768px) {
-            /* Hide desktop sidebar on mobile */
-            #sidebar {
-                display: none;
+            .sidebar-container {
+                display: none; /* Hide desktop sidebar on mobile */
+            }
+            .content-container {
+                width: 100% !important;
+                margin-left: 0 !important;
             }
             .main-content {
                 padding: 0.75rem;
-                margin-left: 0 !important; /* Ensure no left margin on mobile */
-                width: 100% !important; /* Full width on mobile */
+                margin-left: 0 !important;
+                width: 100% !important;
             }
             .navbar-brand {
                 font-size: 0.9rem;
@@ -326,6 +340,48 @@ $reg_number = $student['reg_number'] ?? '';
             }
         }
 
+        /* Desktop layout - ensure no margin issues */
+        @media (min-width: 769px) {
+            .content-container {
+                margin-left: 0 !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* Mobile sidebar overlay styling */
+        #mobile-sidebar {
+            z-index: 9999 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #mobile-sidebar.hidden {
+            display: none !important;
+        }
+
+        #mobile-sidebar:not(.hidden) {
+            display: flex !important;
+        }
+
+        /* Mobile sidebar panel animation */
+        #mobile-sidebar .sidebar-panel {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            width: 280px !important;
+            height: 100vh !important;
+            overflow-y: auto !important;
+        }
+
+        #mobile-sidebar:not(.hidden) .sidebar-panel {
+            transform: translateX(0);
+        }
+
         /* Navbar gradient */
         .navbar-gradient {
             background: linear-gradient(135deg, #07442d 0%, #206f56 50%, #0f7b5a 100%);
@@ -334,6 +390,28 @@ $reg_number = $student['reg_number'] ?? '';
         /* Profile glow effect */
         .profile-glow {
             box-shadow: 0 0 20px rgba(7, 68, 45, 0.3);
+        }
+
+        /* Focus styles for accessibility */
+        a:focus, button:focus {
+            outline: 2px solid #07442d;
+            outline-offset: 2px;
+        }
+
+        /* Loading states */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Card animations */
+        @keyframes fadeInUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        .card-animation {
+            animation: fadeInUp 0.5s ease-out;
         }
     </style>
 </head>
@@ -345,9 +423,9 @@ $reg_number = $student['reg_number'] ?? '';
                 <!-- Left side - Logo and Brand -->
                 <div class="flex items-center space-x-4">
                     <!-- Mobile sidebar toggle -->
-                    <button id="sidebar-menu-btn" class="md:hidden text-slate-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-slate-600/50 transition-all duration-200">
+                    <label for="mobile-sidebar-toggle" class="md:hidden text-slate-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-slate-600/50 transition-all duration-200 cursor-pointer">
                         <i class="fas fa-bars text-lg"></i>
-                    </button>
+                    </label>
                     
                     <!-- Brand -->
                     <div class="flex items-center space-x-3">
@@ -500,11 +578,8 @@ $reg_number = $student['reg_number'] ?? '';
     <div class="flex h-screen bg-gray-50 overflow-hidden">
         <?php include 'includes/student_sidebar.php'; ?>
 
-
-
-
         <!-- Main Content Area with scrollable content -->
-        <div class="flex-1 flex flex-col overflow-hidden md:ml-64">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Page Header - Fixed -->
             <div class="flex-shrink-0 main-content px-3 sm:px-4 lg:px-6 py-3 sm:py-4 bg-white border-b border-gray-200">
                 <div class="page-header">
@@ -906,606 +981,47 @@ $reg_number = $student['reg_number'] ?? '';
         </div>
     </div>
 
-    <!-- Tab Switching JavaScript -->
     <script>
-        // SweetAlert notifications
-        <?php if (!empty($errors)): ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'Please fix the following errors:',
-                html: '<?php echo "• " . implode("<br>• ", array_map(function($error) { return htmlspecialchars($error, ENT_QUOTES, "UTF-8"); }, $errors)); ?>',
-                confirmButtonColor: '#dc2626'
-            });
-        <?php endif; ?>
-
-        <?php if ($success): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: '<?php echo addslashes(htmlspecialchars($success, ENT_QUOTES, "UTF-8")); ?>',
-                confirmButtonColor: '#07442d'
-            });
-        <?php endif; ?>
-
+        // Tab functionality - restore the removed JavaScript for tabs
         document.addEventListener('DOMContentLoaded', function() {
-            // Tab functionality - Enhanced with better error handling
-            function initializeTabs() {
-                const tabLinks = document.querySelectorAll('.tab-link');
-                const tabContents = document.querySelectorAll('.tab-content');
-
-                function showTab(targetTab) {
-                    // Hide all tab contents
-                    tabContents.forEach(content => {
-                        content.classList.add('hidden');
-                    });
-
-                    // Remove active styles from all tabs
-                    tabLinks.forEach(link => {
-                        link.classList.remove('border-primary', 'text-primary');
-                        link.classList.add('border-transparent', 'text-gray-500');
-                    });
-
-                    // Show target tab content
-                    const targetContent = document.getElementById('content-' + targetTab);
-                    if (targetContent) {
-                        targetContent.classList.remove('hidden');
-                    }
-
-                    // Add active styles to current tab
-                    const activeTab = document.getElementById('tab-' + targetTab);
-                    if (activeTab) {
-                        activeTab.classList.remove('border-transparent', 'text-gray-500');
-                        activeTab.classList.add('border-primary', 'text-primary');
-                    }
-                }
-
-                // Tab click handlers
-                tabLinks.forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const href = this.getAttribute('href');
-                        if (href && href.length > 1) {
-                            const targetTab = href.substring(1);
-                            showTab(targetTab);
-                        }
-                    });
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // Initialize default tab (Personal Details)
+            function showTab(tabName) {
+                // Remove active classes from all tabs
+                tabLinks.forEach(l => {
+                    l.classList.remove('border-primary', 'text-primary');
+                    l.classList.add('border-transparent', 'text-gray-500');
                 });
-
-                // Initialize first tab
-                showTab('personal');
                 
-                // Make showTab function globally available for debugging
-                window.showTab = showTab;
-            }
-
-            // Initialize tabs after DOM is ready
-            initializeTabs();
-
-            // Form validation and interactions
-            const profileForm = document.getElementById('profileForm');
-            if (profileForm) {
-                // Add visual indicators for required fields
-                const requiredFields = profileForm.querySelectorAll('input[required], select[required], textarea[required]');
-                requiredFields.forEach(field => {
-                    const label = document.querySelector(`label[for="${field.id}"]`);
-                    if (label && !label.innerHTML.includes('*')) {
-                        label.innerHTML += ' <span class="text-red-500">*</span>';
-                    }
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
                 });
-
-                // Real-time validation for individual fields
-                requiredFields.forEach(field => {
-                    field.addEventListener('blur', function() {
-                        validateField(this);
-                    });
-                    
-                    field.addEventListener('input', function() {
-                        clearFieldError(this);
-                    });
-                });
-
-                function validateField(field) {
-                    const value = field.value.trim();
-                    const fieldName = field.name;
-                    let isValid = true;
-                    let errorMessage = '';
-
-                    // Clear previous error
-                    clearFieldError(field);
-
-                    if (field.hasAttribute('required') && !value) {
-                        isValid = false;
-                        errorMessage = getFieldErrorMessage(fieldName, 'required');
-                    } else if (value) {
-                        // Specific field validations
-                        switch (fieldName) {
-                            case 'email':
-                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                if (!emailRegex.test(value)) {
-                                    isValid = false;
-                                    errorMessage = 'Please enter a valid email address (e.g., student@example.com)';
-                                }
-                                break;
-                            case 'phone_number':
-                                // More flexible phone regex that accepts various formats including leading zeros
-                                const phoneRegex = /^[0-9+\-\s\(\)]{10,15}$/;
-                                const digitsOnly = value.replace(/[^0-9]/g, '');
-                                if (!phoneRegex.test(value) || digitsOnly.length < 10 || digitsOnly.length > 15) {
-                                    isValid = false;
-                                    errorMessage = 'Please enter a valid phone number starting with +255 (e.g., +255753225961)';
-                                }
-                                break;
-                            case 'year_of_study':
-                                const year = parseInt(value);
-                                if (year < 1 || year > 8) {
-                                    isValid = false;
-                                    errorMessage = 'Year of study must be between 1 and 8';
-                                }
-                                break;
-                            case 'reg_number':
-                                if (value.length < 3) {
-                                    isValid = false;
-                                    errorMessage = 'Registration number should be at least 3 characters';
-                                }
-                                break;
-                        }
-                    }
-
-                    if (!isValid) {
-                        showFieldError(field, errorMessage);
-                    }
-
-                    return isValid;
-                }
-
-                function getFieldErrorMessage(fieldName, type) {
-                    const messages = {
-                        'full_name': 'Please enter your complete name',
-                        'reg_number': 'Registration number is required',
-                        'gender': 'Please select your gender',
-                        'college_name': 'Please enter your college/institution name',
-                        'department': 'Please enter your department',
-                        'course_name': 'Please enter your course name',
-                        'program': 'Please select your program type',
-                        'level': 'Please enter your academic level',
-                        'year_of_study': 'Please select your year of study',
-                        'phone_number': 'Please enter your phone number',
-                        'address': 'Please enter your complete address',
-                        'email': 'Please enter your email address'
-                    };
-                    return messages[fieldName] || 'This field is required';
-                }
-
-                function showFieldError(field, message) {
-                    field.classList.add('border-red-500', 'bg-red-50');
-                    field.classList.remove('border-gray-300');
-                    
-                    // Remove existing error message
-                    const existingError = field.parentNode.querySelector('.field-error');
-                    if (existingError) {
-                        existingError.remove();
-                    }
-                    
-                    // Add error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'field-error text-red-600 text-sm mt-1';
-                    errorDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>' + message;
-                    field.parentNode.appendChild(errorDiv);
-                }
-
-                function clearFieldError(field) {
-                    field.classList.remove('border-red-500', 'bg-red-50');
-                    field.classList.add('border-gray-300');
-                    
-                    const existingError = field.parentNode.querySelector('.field-error');
-                    if (existingError) {
-                        existingError.remove();
-                    }
-                }
-
-                // Check completion percentage
-                function updateCompletionStatus() {
-                    const totalFields = requiredFields.length;
-                    let completedFields = 0;
-                    
-                    requiredFields.forEach(field => {
-                        if (field.value.trim()) {
-                            completedFields++;
-                        }
-                    });
-                    
-                    const percentage = Math.round((completedFields / totalFields) * 100);
-                    
-                    // Update or create completion indicator
-                    let indicator = document.getElementById('completion-indicator');
-                    if (!indicator) {
-                        indicator = document.createElement('div');
-                        indicator.id = 'completion-indicator';
-                        indicator.className = 'mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md';
-                        const form = document.querySelector('form[method="POST"]');
-                        form.insertBefore(indicator, form.firstChild);
-                    }
-                    
-                    if (percentage === 100) {
-                        indicator.className = 'mb-4 p-3 bg-green-50 border border-green-200 rounded-md';
-                        indicator.innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i><strong>Profile Complete!</strong> All required fields are filled. You can now save your profile.';
-                    } else {
-                        indicator.className = 'mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md';
-                        indicator.innerHTML = `<i class="fas fa-info-circle text-yellow-600 mr-2"></i><strong>Profile ${percentage}% Complete</strong> - Please fill all required fields marked with <span class="text-red-500">*</span> to save your profile.`;
-                    }
-                }
-
-                // File upload validation and preview
-                const fileInputs = document.querySelectorAll('input[type="file"]');
-                fileInputs.forEach(input => {
-                    input.addEventListener('change', function(e) {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        
-                        const fileType = input.name;
-                        let maxSize, allowedTypes;
-                        
-                        // Set validation rules based on file type
-                        if (fileType === 'profile_photo') {
-                            maxSize = 2 * 1024 * 1024; // 2MB
-                            allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                        } else {
-                            maxSize = 5 * 1024 * 1024; // 5MB
-                            if (fileType === 'id_document') {
-                                allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-                            } else {
-                                allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                            }
-                        }
-                        
-                        // Validate file size
-                        if (file.size > maxSize) {
-                            const maxSizeMB = maxSize / (1024 * 1024);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Too Large',
-                                text: `File size must be less than ${maxSizeMB}MB`,
-                                confirmButtonColor: '#dc2626'
-                            });
-                            input.value = '';
-                            return;
-                        }
-                        
-                        // Validate file type
-                        if (!allowedTypes.includes(file.type)) {
-                            let allowedText = '';
-                            if (fileType === 'profile_photo') {
-                                allowedText = 'JPG, PNG, or GIF';
-                            } else if (fileType === 'id_document') {
-                                allowedText = 'PDF, JPG, or PNG';
-                            } else {
-                                allowedText = 'PDF, DOC, or DOCX';
-                            }
-                            
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Invalid File Type',
-                                text: `Please select a ${allowedText} file`,
-                                confirmButtonColor: '#dc2626'
-                            });
-                            input.value = '';
-                            return;
-                        }
-                        
-                        // Show success message for valid file
-                        const fileName = file.name;
-                        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-                        
-                        // Update the visual indicator if it exists
-                        const container = input.closest('.border');
-                        if (container) {
-                            let indicator = container.querySelector('.file-selected-indicator');
-                            if (!indicator) {
-                                indicator = document.createElement('div');
-                                indicator.className = 'file-selected-indicator mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700';
-                                input.parentNode.appendChild(indicator);
-                            }
-                            indicator.innerHTML = `<i class="fas fa-check-circle mr-1"></i>Selected: ${fileName} (${fileSize} MB)`;
-                        }
-                    });
-                });
-
-                // Update completion status on field changes
-                requiredFields.forEach(field => {
-                    field.addEventListener('input', updateCompletionStatus);
-                    field.addEventListener('change', updateCompletionStatus);
-                });
-
-                // Initial completion check
-                updateCompletionStatus();
-
-                profileForm.addEventListener('submit', function(e) {
-                    // Comprehensive validation before submission
-                    const requiredFieldData = [
-                        { field: 'full_name', name: 'Full Name', message: 'Please enter your complete name' },
-                        { field: 'reg_number', name: 'Registration Number', message: 'Please enter your student registration number' },
-                        { field: 'gender', name: 'Gender', message: 'Please select your gender' },
-                        { field: 'college_name', name: 'College/Institution', message: 'Please enter your educational institution name' },
-                        { field: 'department', name: 'Department', message: 'Please enter your academic department' },
-                        { field: 'course_name', name: 'Course Name', message: 'Please enter your course/program name' },
-                        { field: 'program', name: 'Program Type', message: 'Please select your program type (Certificate, Diploma, etc.)' },
-                        { field: 'level', name: 'Academic Level', message: 'Please enter your current academic level' },
-                        { field: 'year_of_study', name: 'Year of Study', message: 'Please select your current year of study' },
-                        { field: 'phone_number', name: 'Phone Number', message: 'Please enter your contact phone number' },
-                        { field: 'address', name: 'Address', message: 'Please enter your complete residential address' },
-                        { field: 'email', name: 'Email Address', message: 'Please enter a valid email address for communication' }
-                    ];
-                    
-                    const errors = [];
-                    let firstErrorField = null;
-                    
-                    requiredFieldData.forEach(({ field, name, message }) => {
-                        const element = document.querySelector(`[name="${field}"]`);
-                        if (!element || !element.value.trim()) {
-                            errors.push(message);
-                            if (!firstErrorField) {
-                                firstErrorField = element;
-                            }
-                            if (element) {
-                                showFieldError(element, message);
-                            }
-                        }
-                    });
-
-                    // Email validation
-                    const emailField = document.querySelector('[name="email"]');
-                    if (emailField && emailField.value.trim()) {
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(emailField.value.trim())) {
-                            errors.push('Please enter a valid email address (e.g., student@example.com)');
-                            showFieldError(emailField, 'Please enter a valid email address');
-                            if (!firstErrorField) firstErrorField = emailField;
-                        }
-                    }
-
-                    // Phone validation
-                    const phoneField = document.querySelector('[name="phone_number"]');
-                    if (phoneField && phoneField.value.trim()) {
-                        const phoneRegex = /^[0-9+\-\s\(\)]{10,15}$/;
-                        const digitsOnly = phoneField.value.trim().replace(/[^0-9]/g, '');
-                        if (!phoneRegex.test(phoneField.value.trim()) || digitsOnly.length < 10 || digitsOnly.length > 15) {
-                            errors.push('Please enter a valid phone number starting with +255 (e.g., +255753225961)');
-                            showFieldError(phoneField, 'Please enter a valid phone number');
-                            if (!firstErrorField) firstErrorField = phoneField;
-                        }
-                    }
-
-                    // Year validation
-                    const yearField = document.querySelector('[name="year_of_study"]');
-                    if (yearField && yearField.value) {
-                        const year = parseInt(yearField.value);
-                        if (year < 1 || year > 8) {
-                            errors.push('Year of study must be between 1 and 8');
-                            showFieldError(yearField, 'Year must be between 1-8');
-                            if (!firstErrorField) firstErrorField = yearField;
-                        }
-                    }
-                    
-                    if (errors.length > 0) {
-                        e.preventDefault();
-                        
-                        // Scroll to first error field
-                        if (firstErrorField) {
-                            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            firstErrorField.focus();
-                        }
-                        
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Please Complete All Required Fields',
-                            html: '<div class="text-left"><p class="mb-3"><strong>The following fields need to be completed:</strong></p><ul class="text-sm">' + 
-                                  errors.map(error => '<li class="mb-1"><i class="fas fa-exclamation-circle text-red-500 mr-2"></i>' + error + '</li>').join('') + 
-                                  '</ul><p class="mt-3 text-sm text-gray-600"><strong>Tip:</strong> Look for fields marked with <span class="text-red-500">*</span> and error messages in red.</p></div>',
-                            confirmButtonColor: '#dc2626',
-                            confirmButtonText: 'OK, I\'ll complete them',
-                            width: '600px'
-                        });
-                        return false;
-                    }
-                    
-                    // Show loading for form submission
-                    Swal.fire({
-                        title: 'Updating Profile...',
-                        text: 'Please wait while we save your information',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                });
-            }
-
-            // File upload preview
-            const profilePhotoInput = document.getElementById('profile_photo');
-            if (profilePhotoInput) {
-                profilePhotoInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        // Validate file size (2MB)
-                        if (file.size > 2 * 1024 * 1024) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'File Too Large',
-                                text: 'Profile photo must be less than 2MB',
-                                confirmButtonColor: '#dc2626'
-                            });
-                            e.target.value = '';
-                            return;
-                        }
-
-                        // Validate file type
-                        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                        if (!allowedTypes.includes(file.type)) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Invalid File Type',
-                                text: 'Please select a JPEG, PNG, or GIF image',
-                                confirmButtonColor: '#dc2626'
-                            });
-                            e.target.value = '';
-                            return;
-                        }
-
-                        // Show preview
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const imgContainer = document.querySelector('.w-24.h-24.rounded-full');
-                            if (imgContainer) {
-                                imgContainer.innerHTML = '<img src="' + e.target.result + '" alt="Profile Preview" class="w-24 h-24 rounded-full object-cover">';
-                            }
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-        });
-
-        // Mobile Navigation Menu Functionality
-        console.log('JavaScript loaded');
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const sidebarMenuBtn = document.getElementById('sidebar-menu-btn');
-        const mobileSidebar = document.getElementById('mobile-sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-        const closeSidebarBtn = document.getElementById('close-sidebar');
-        
-        console.log('Elements found:', {
-            mobileMenuBtn: !!mobileMenuBtn,
-            mobileMenu: !!mobileMenu,
-            sidebarMenuBtn: !!sidebarMenuBtn,
-            mobileSidebar: !!mobileSidebar,
-            sidebarOverlay: !!sidebarOverlay,
-            closeSidebarBtn: !!closeSidebarBtn
-        });
-
-        // Manual test function for debugging
-        window.testSidebar = function() {
-            console.log('Testing sidebar manually...');
-            const sidebar = document.getElementById('mobile-sidebar');
-            if (sidebar) {
-                console.log('Sidebar found, current classes:', sidebar.className);
-                sidebar.classList.remove('hidden');
-                sidebar.style.display = 'flex';
-                sidebar.style.zIndex = '9999';
-                sidebar.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                console.log('Sidebar should now be visible');
-            } else {
-                console.log('Sidebar NOT found!');
-            }
-        };
-
-        // Toggle mobile navigation menu (user menu)
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', function() {
-                if (mobileMenu) {
-                    mobileMenu.classList.toggle('hidden');
-                }
-            });
-        }
-
-        // Toggle mobile sidebar
-        if (sidebarMenuBtn) {
-            console.log('Sidebar menu button found');
-            sidebarMenuBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Sidebar toggle clicked');
                 
-                // Add a small delay to ensure DOM is ready
-                setTimeout(function() {
-                    const sidebar = document.getElementById('mobile-sidebar');
-                    if (sidebar) {
-                        console.log('Mobile sidebar found, showing...');
-                        console.log('Current sidebar classes before:', sidebar.className);
-                        sidebar.classList.remove('hidden');
-                        sidebar.style.display = 'flex';
-                        sidebar.style.zIndex = '9999';
-                        document.body.style.overflow = 'hidden';
-                        console.log('Current sidebar classes after:', sidebar.className);
-                    } else {
-                        console.log('Mobile sidebar not found!');
-                    }
-                }, 10);
-            });
-        } else {
-            console.log('Sidebar menu button NOT found!');
-        }
-
-        // Close sidebar function
-        function closeMobileSidebar() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            if (sidebar) {
-                sidebar.classList.add('hidden');
-                sidebar.style.display = 'none';
+                // Add active classes to selected tab
+                const activeLink = document.getElementById('tab-' + tabName);
+                const activeContent = document.getElementById('content-' + tabName);
+                
+                if (activeLink && activeContent) {
+                    activeLink.classList.remove('border-transparent', 'text-gray-500');
+                    activeLink.classList.add('border-primary', 'text-primary');
+                    activeContent.classList.remove('hidden');
+                }
             }
-            document.body.style.overflow = '';
-        }
-
-        // Close sidebar when clicking overlay or close button
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', closeMobileSidebar);
-        }
-        if (closeSidebarBtn) {
-            closeSidebarBtn.addEventListener('click', closeMobileSidebar);
-        }
-
-        // Close sidebar when clicking links on mobile
-        const mobileNavLinks = document.querySelectorAll('#mobile-sidebar a');
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                setTimeout(closeMobileSidebar, 150);
+            
+            // Show default tab (Personal Details)
+            showTab('personal');
+            
+            // Add click event listeners to tab links
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    showTab(targetId);
+                });
             });
         });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(e) {
-            if (mobileMenu && !mobileMenu.contains(e.target) && !mobileMenuBtn?.contains(e.target)) {
-                mobileMenu.classList.add('hidden');
-            }
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 768) {
-                if (mobileMenu) {
-                    mobileMenu.classList.add('hidden');
-                }
-                if (mobileSidebar) {
-                    mobileSidebar.classList.add('hidden');
-                }
-                document.body.style.overflow = '';
-            }
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (mobileMenu) {
-                    mobileMenu.classList.add('hidden');
-                }
-                closeMobileSidebar();
-            }
-        });
-
-        // Manual test function for debugging
-        window.testSidebar = function() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            if (sidebar) {
-                console.log('Manual test: sidebar found');
-                sidebar.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            } else {
-                console.log('Manual test: sidebar NOT found');
-            }
-        };
-
-        console.log('You can test the sidebar manually by typing testSidebar() in the browser console');
     </script>
 </body>
 </html>

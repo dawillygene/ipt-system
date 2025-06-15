@@ -93,35 +93,6 @@ $stats = getStudentStats($con, $student_id);
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Enhanced static layout styles */
-        .main-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        .sidebar-container {
-            flex-shrink: 0;
-            width: 256px; /* w-64 in Tailwind */
-        }
-        
-        .content-container {
-            flex: 1;
-            min-width: 0; /* Prevents flex child from overflowing */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .sidebar-container {
-                display: none;
-            }
-            .content-container {
-                width: 100% !important;
-                margin-left: 0 !important;
-            }
-        }
-        
         /* Card animations */
         @keyframes fadeInUp {
             0% { transform: translateY(20px); opacity: 0; }
@@ -155,26 +126,17 @@ $stats = getStudentStats($con, $student_id);
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Main Layout Container with Static Positioning -->
-    <div class="main-layout">
-        <!-- Sidebar Container -->
-        <div class="sidebar-container">
-            <?php include 'includes/student_sidebar.php'; ?>
-        </div>
-        
-        <!-- Content Container -->
-        <div class="content-container">
-            <!-- Enhanced Static Navigation Bar - Project Colors -->
+<body class="bg-gray-50 min-h-screen">
+    <!-- Enhanced Static Navigation Bar - Project Colors -->
             <nav class="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 shadow-2xl border-b border-slate-600 static top-0 z-50">
                 <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <!-- Left side - Logo and Brand -->
                         <div class="flex items-center space-x-4">
                             <!-- Mobile sidebar toggle -->
-                            <button id="sidebar-menu-btn" class="md:hidden text-slate-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-slate-600/50 transition-all duration-200">
+                            <label for="mobile-sidebar-toggle" class="md:hidden text-slate-300 hover:text-white focus:outline-none p-2 rounded-lg hover:bg-slate-600/50 transition-all duration-200 cursor-pointer">
                                 <i class="fas fa-bars text-lg"></i>
-                            </button>
+                            </label>
                             
                             <!-- Brand -->
                             <div class="flex items-center space-x-3">
@@ -328,8 +290,13 @@ $stats = getStudentStats($con, $student_id);
                     </div>
                 </div>
             </nav>
-            
-            <!-- Main Content Area -->
+
+    <!-- Main Layout Container -->
+    <div class="flex h-screen bg-gray-50 overflow-hidden">
+        <?php include 'includes/student_sidebar.php'; ?>
+
+        <!-- Main Content Area with scrollable content -->
+        <div class="flex flex-col flex-1 min-h-0">
             <main class="flex-1 overflow-y-auto bg-gray-50">
                 <!-- Page Header -->
                 <div class="bg-white border-b border-gray-200 px-4 py-6 sm:px-6 lg:px-8">
@@ -567,208 +534,5 @@ $stats = getStudentStats($con, $student_id);
             </main>
         </div>
     </div>
-
-    <!-- Enhanced JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const sidebarMenuBtn = document.getElementById('sidebar-menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mobileSidebar = document.getElementById('mobile-sidebar');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-            const closeSidebarBtn = document.getElementById('close-sidebar');
-
-            console.log('Dashboard JavaScript loaded');
-            console.log('Elements found:', {
-                mobileMenuBtn: !!mobileMenuBtn,
-                sidebarMenuBtn: !!sidebarMenuBtn,
-                mobileMenu: !!mobileMenu,
-                mobileSidebar: !!mobileSidebar,
-                sidebarOverlay: !!sidebarOverlay,
-                closeSidebarBtn: !!closeSidebarBtn
-            });
-
-            // Manual test function for debugging
-            window.testSidebar = function() {
-                console.log('Testing sidebar manually...');
-                const sidebar = document.getElementById('mobile-sidebar');
-                if (sidebar) {
-                    console.log('Sidebar found, current classes:', sidebar.className);
-                    sidebar.classList.remove('hidden');
-                    sidebar.style.display = 'flex';
-                    sidebar.style.zIndex = '9999';
-                    sidebar.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                    console.log('Sidebar should now be visible');
-                } else {
-                    console.log('Sidebar NOT found!');
-                }
-            };
-
-            // Toggle mobile navigation menu (user menu)
-            if (mobileMenuBtn) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    if (mobileMenu) {
-                        mobileMenu.classList.toggle('hidden');
-                    }
-                });
-            }
-
-            // Toggle mobile sidebar
-            if (sidebarMenuBtn) {
-                console.log('Sidebar menu button found');
-                sidebarMenuBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Sidebar toggle clicked');
-                    
-                    // Add a small delay to ensure DOM is ready
-                    setTimeout(function() {
-                        const sidebar = document.getElementById('mobile-sidebar');
-                        if (sidebar) {
-                            console.log('Mobile sidebar found, showing...');
-                            console.log('Current sidebar classes before:', sidebar.className);
-                            sidebar.classList.remove('hidden');
-                            sidebar.style.display = 'flex';
-                            sidebar.style.zIndex = '9999';
-                            document.body.style.overflow = 'hidden';
-                            console.log('Current sidebar classes after:', sidebar.className);
-                        } else {
-                            console.log('Mobile sidebar not found!');
-                        }
-                    }, 10);
-                });
-            } else {
-                console.log('Sidebar menu button NOT found!');
-            }
-
-            // Close sidebar function
-            function closeMobileSidebar() {
-                const sidebar = document.getElementById('mobile-sidebar');
-                if (sidebar) {
-                    console.log('🔒 Closing sidebar');
-                    sidebar.classList.add('hidden');
-                    sidebar.style.display = 'none';
-                    document.body.style.overflow = '';
-                }
-            }
-
-            // Close sidebar when clicking overlay or close button
-            document.addEventListener('click', function(e) {
-                if (e.target && e.target.id === 'sidebar-overlay') {
-                    closeMobileSidebar();
-                }
-                if (e.target && e.target.id === 'close-sidebar') {
-                    closeMobileSidebar();
-                }
-                // Also check if clicked element is inside close button
-                if (e.target && e.target.closest('#close-sidebar')) {
-                    closeMobileSidebar();
-                }
-            });
-
-            // Close sidebar when clicking links on mobile
-            const mobileNavLinks = document.querySelectorAll('#mobile-sidebar a');
-            mobileNavLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    setTimeout(closeMobileSidebar, 150);
-                });
-            });
-
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768) {
-                    if (mobileSidebar) {
-                        mobileSidebar.classList.add('hidden');
-                    }
-                    if (mobileMenu) {
-                        mobileMenu.classList.add('hidden');
-                    }
-                    document.body.style.overflow = '';
-                }
-            });
-
-            // Keyboard navigation
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeMobileSidebar();
-                    if (mobileMenu) {
-                        mobileMenu.classList.add('hidden');
-                    }
-                }
-            });
-
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (mobileMenu && !mobileMenu.contains(e.target) && !mobileMenuBtn?.contains(e.target)) {
-                    mobileMenu.classList.add('hidden');
-                }
-            });
-        });
-
-        // Animate stats counters
-        function animateStats() {
-            const statNumbers = document.querySelectorAll('.text-2xl.font-bold');
-            
-            statNumbers.forEach(stat => {
-                const text = stat.textContent;
-                if (!isNaN(text)) {
-                    const finalNumber = parseInt(text);
-                    let currentNumber = 0;
-                    const increment = Math.ceil(finalNumber / 30);
-                    const timer = setInterval(() => {
-                        currentNumber += increment;
-                        if (currentNumber >= finalNumber) {
-                            stat.textContent = finalNumber;
-                            clearInterval(timer);
-                        } else {
-                            stat.textContent = currentNumber;
-                        }
-                    }, 50);
-                }
-            });
-        }
-
-        // Run counter animation after page load
-        window.addEventListener('load', () => {
-            setTimeout(animateStats, 500);
-        });
-
-        // Add smooth scroll behavior
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-
-        // Add a manual test function for debugging
-        window.testSidebar = function() {
-            console.log('🧪 Manual sidebar test');
-            const sidebar = document.getElementById('mobile-sidebar');
-            if (sidebar) {
-                console.log('✅ Sidebar found manually');
-                sidebar.classList.remove('hidden');
-                sidebar.style.display = 'flex';
-                sidebar.style.position = 'fixed';
-                sidebar.style.top = '0';
-                sidebar.style.left = '0';
-                sidebar.style.right = '0';
-                sidebar.style.bottom = '0';
-                sidebar.style.zIndex = '9999';
-                document.body.style.overflow = 'hidden';
-                console.log('✅ Sidebar should be visible with manual styles');
-            } else {
-                console.error('❌ Sidebar not found in manual test');
-            }
-        };
-
-        console.log('🚀 Dashboard loaded. Use testSidebar() to test manually.');
-    </script>
 </body>
 </html>

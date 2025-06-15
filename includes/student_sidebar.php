@@ -1,10 +1,13 @@
 <?php
-// Sidebar component for student pages - Static design
+// Sidebar component for student pages - Pure CSS Solution
 // Requires: $student_data, $student_name arrays/variables to be defined before including
 
 // Get current page for highlighting active menu
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
+
+<!-- Pure CSS Mobile Sidebar Toggle (Hidden Checkbox) -->
+<input type="checkbox" id="mobile-sidebar-toggle" class="hidden">
 
 <!-- Enhanced Static Sidebar - Project Colors -->
 <div id="sidebar" class="hidden md:flex md:flex-shrink-0">
@@ -82,11 +85,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </a>
                 
                 <!-- Feedback -->
-                <a href="student_feedback.php" class="flex items-center px-4 py-3 <?php echo ($current_page == 'student_feedback.php') ? 'text-primary bg-primary/10 border-r-4 border-primary shadow-sm' : 'text-gray-700 hover:text-primary hover:bg-gray-50'; ?> rounded-lg transition-all duration-200 group text-sm font-medium">
-                    <i class="fas fa-comments <?php echo ($current_page == 'student_feedback.php') ? 'text-primary' : 'text-gray-500 group-hover:text-primary'; ?> mr-3 w-5 text-center"></i>
+                <a href="student_feedback.php" class="flex items-center px-4 py-3 <?php echo ($current_page == 'student_feedback.php') ? 'text-white bg-gradient-to-r from-primary to-secondary shadow-lg' : 'text-slate-300 hover:text-white hover:bg-slate-700/50'; ?> rounded-lg transition-all duration-200 group text-sm font-medium">
+                    <i class="fas fa-comments <?php echo ($current_page == 'student_feedback.php') ? 'text-white' : 'text-slate-300 group-hover:text-white'; ?> mr-3 w-5 text-center"></i>
                     <span>Feedback</span>
                     <?php if ($current_page == 'student_feedback.php'): ?>
-                        <i class="fas fa-chevron-right ml-auto text-primary text-xs"></i>
+                        <i class="fas fa-chevron-right ml-auto text-white text-xs"></i>
                     <?php endif; ?>
                 </a>
                 
@@ -120,18 +123,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </div>
 </div>
 
-<!-- Mobile Sidebar Overlay -->
-<div id="mobile-sidebar" class="fixed inset-0 z-50 md:hidden hidden">
+<!-- Mobile Sidebar Overlay with Pure CSS Control -->
+<div id="mobile-sidebar" class="css-mobile-sidebar">
     <!-- Background overlay -->
-    <div class="fixed inset-0 bg-black bg-opacity-75" id="sidebar-overlay"></div>
+    <label for="mobile-sidebar-toggle" class="fixed inset-0 bg-black bg-opacity-75 cursor-pointer" id="sidebar-overlay"></label>
     
-    <!-- Sidebar panel -->
-    <div class="absolute left-0 top-0 flex flex-col h-full w-80 max-w-xs bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 shadow-2xl">
+    <!-- Sidebar panel with enhanced styling -->
+    <div class="sidebar-panel fixed left-0 top-0 flex flex-col h-full w-80 max-w-xs bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 shadow-2xl z-50">
         <!-- Close button for mobile -->
         <div class="absolute top-4 right-4 z-10">
-            <button id="close-sidebar" class="flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-white bg-white/20 hover:bg-white/30 transition-colors">
+            <label for="mobile-sidebar-toggle" class="flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-white bg-white/20 hover:bg-white/30 transition-colors cursor-pointer">
                 <i class="fas fa-times text-white text-lg"></i>
-            </button>
+            </label>
         </div>
 
         <!-- Mobile Profile Section -->
@@ -189,10 +192,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </a>
             </nav>
         </div>
+
+        <!-- Mobile Navigation Auto-close Links -->
+        <div class="border-t border-slate-600 p-4">
+            <label for="mobile-sidebar-toggle" class="block w-full text-center px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors cursor-pointer">
+                <i class="fas fa-times mr-2"></i>
+                Close Menu
+            </label>
+        </div>
     </div>
 </div>
 
 <style>
+/* ==================== PURE CSS MOBILE SIDEBAR SOLUTION ==================== */
+
+/* Hide the checkbox that controls the sidebar */
+#mobile-sidebar-toggle {
+    display: none !important;
+}
+
 /* Enhanced static sidebar styling */
 #sidebar {
     z-index: 30;
@@ -219,52 +237,104 @@ $current_page = basename($_SERVER['PHP_SELF']);
     left: 100%;
 }
 
-/* Mobile sidebar specific styling */
-#mobile-sidebar {
-    z-index: 9999 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
+/* PURE CSS MOBILE SIDEBAR IMPLEMENTATION */
+/* Default state: Mobile sidebar is hidden */
+.css-mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    
+    /* Initially hidden - using visibility and opacity for smooth transitions */
+    visibility: hidden;
+    opacity: 0;
+    
+    /* Smooth transition */
+    transition: visibility 0.3s ease, opacity 0.3s ease;
+    
+    /* Hide on desktop */
+    display: none;
 }
 
-#mobile-sidebar.hidden {
-    display: none !important;
+/* Show mobile sidebar only on mobile screens */
+@media (max-width: 767px) {
+    .css-mobile-sidebar {
+        display: block;
+    }
 }
 
-#mobile-sidebar:not(.hidden) {
-    display: flex !important;
+/* When checkbox is checked: Show the mobile sidebar */
+#mobile-sidebar-toggle:checked ~ .css-mobile-sidebar {
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-/* Mobile sidebar panel animation */
-#mobile-sidebar > div:last-child {
+/* Sidebar panel default state (off-screen) */
+.css-mobile-sidebar .sidebar-panel {
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
-    background-color: white !important;
-    width: 280px !important;
-    height: 100vh !important;
-    overflow-y: auto !important;
+    width: 280px;
+    max-width: 90vw;
+    height: 100vh;
+    overflow-y: auto;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #0f172a 100%);
+    z-index: 9999;
 }
 
-#mobile-sidebar:not(.hidden) > div:last-child {
-    transform: translateX(0);
+/* When checkbox is checked: Slide the sidebar panel in */
+#mobile-sidebar-toggle:checked ~ .css-mobile-sidebar .sidebar-panel {
+    transform: translateX(0) !important;
 }
 
-/* Additional mobile sidebar fixes */
-#mobile-sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+/* Background overlay styling */
+.css-mobile-sidebar #sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
 }
 
-/* Ensure overlay covers everything */
-#sidebar-overlay {
-    width: 100vw !important;
-    height: 100vh !important;
+/* Body scroll lock when sidebar is open */
+#mobile-sidebar-toggle:checked ~ * body,
+#mobile-sidebar-toggle:checked ~ body {
+    overflow: hidden !important;
+}
+
+/* Alternative body scroll lock method */
+html:has(#mobile-sidebar-toggle:checked) body {
+    overflow: hidden !important;
+}
+
+/* Close button styling with better visibility */
+.css-mobile-sidebar label[for="mobile-sidebar-toggle"] {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.css-mobile-sidebar label[for="mobile-sidebar-toggle"]:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.05);
+}
+
+/* Navigation link auto-close functionality */
+/* When a navigation link is clicked, it will naturally navigate to the new page, closing the sidebar */
+.css-mobile-sidebar nav a {
+    /* Add visual feedback for link interaction */
+    transition: all 0.2s ease;
+}
+
+.css-mobile-sidebar nav a:active {
+    transform: scale(0.98);
+    background-color: rgba(7, 68, 45, 0.3) !important;
 }
 
 /* Profile hover effects */
@@ -277,21 +347,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
 }
 
 /* Scrollbar styling for sidebar */
-#sidebar::-webkit-scrollbar {
+#sidebar::-webkit-scrollbar,
+.css-mobile-sidebar .sidebar-panel::-webkit-scrollbar {
     width: 6px;
 }
 
-#sidebar::-webkit-scrollbar-track {
+#sidebar::-webkit-scrollbar-track,
+.css-mobile-sidebar .sidebar-panel::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.05);
     border-radius: 3px;
 }
 
-#sidebar::-webkit-scrollbar-thumb {
+#sidebar::-webkit-scrollbar-thumb,
+.css-mobile-sidebar .sidebar-panel::-webkit-scrollbar-thumb {
     background: rgba(7, 68, 45, 0.2);
     border-radius: 3px;
 }
 
-#sidebar::-webkit-scrollbar-thumb:hover {
+#sidebar::-webkit-scrollbar-thumb:hover,
+.css-mobile-sidebar .sidebar-panel::-webkit-scrollbar-thumb:hover {
     background: rgba(7, 68, 45, 0.4);
 }
 
@@ -300,18 +374,57 @@ $current_page = basename($_SERVER['PHP_SELF']);
     .main-content-area {
         transition: none;
     }
+    
+    /* Hide mobile sidebar completely on desktop */
+    .css-mobile-sidebar {
+        display: none !important;
+    }
 }
 
-/* Mobile sidebar specific styles */
-#mobile-sidebar {
-    z-index: 9999 !important;
+/* Enhanced focus styles for accessibility */
+label[for="mobile-sidebar-toggle"]:focus-within {
+    outline: 2px solid #07442d;
+    outline-offset: 2px;
 }
 
-#mobile-sidebar.hidden {
-    display: none !important;
+/* Smooth animation improvements */
+.css-mobile-sidebar * {
+    box-sizing: border-box;
 }
 
-#mobile-sidebar:not(.hidden) {
-    display: flex !important;
+/* Fallback for browsers that don't support :has() */
+@supports not selector(:has(*)) {
+    .css-mobile-sidebar-open {
+        overflow: hidden !important;
+    }
+}
+
+/* Print styles - hide sidebar in print */
+@media print {
+    #sidebar,
+    .css-mobile-sidebar {
+        display: none !important;
+    }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+    .css-mobile-sidebar .sidebar-panel {
+        border: 2px solid #ffffff;
+    }
+    
+    .css-mobile-sidebar #sidebar-overlay {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .css-mobile-sidebar,
+    .css-mobile-sidebar .sidebar-panel,
+    .css-mobile-sidebar * {
+        transition: none !important;
+        animation: none !important;
+    }
 }
 </style>

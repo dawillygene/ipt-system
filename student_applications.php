@@ -143,8 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($existing) {
             // Update existing application
-            $update_stmt = $con->prepare("UPDATE applications SET company_name = ?, company_location = ?, position_title = ?, training_duration = ?, start_date = ?, end_date = ?, training_area = ?, skills_to_acquire = ?, motivation_letter = ?, preferred_company1 = ?, preferred_company2 = ?, preferred_company3 = ?, status = ?, submitted_at = ? WHERE student_id = ?");
-            $update_stmt->bind_param("sssisssssssssss", $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at, $student_id);
+            $update_stmt = $con->prepare("UPDATE applications SET user_id = ?, company_name = ?, company_location = ?, position_title = ?, training_duration = ?, start_date = ?, end_date = ?, training_area = ?, skills_to_acquire = ?, motivation_letter = ?, preferred_company1 = ?, preferred_company2 = ?, preferred_company3 = ?, status = ?, submitted_at = ? WHERE student_id = ?");
+            $update_stmt->bind_param("isssissssssssssi", $student_id, $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at, $student_id);
             
             if ($update_stmt->execute()) {
                 $success = ($action === 'submit') ? 'Application submitted successfully!' : 'Application saved as draft';
@@ -154,8 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_stmt->close();
         } else {
             // Create new application
-            $insert_stmt = $con->prepare("INSERT INTO applications (student_id, company_name, company_location, position_title, training_duration, start_date, end_date, training_area, skills_to_acquire, motivation_letter, preferred_company1, preferred_company2, preferred_company3, status, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $insert_stmt->bind_param("isssissssssssss", $student_id, $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at);
+            $insert_stmt = $con->prepare("INSERT INTO applications (user_id, student_id, company_name, company_location, position_title, training_duration, start_date, end_date, training_area, skills_to_acquire, motivation_letter, preferred_company1, preferred_company2, preferred_company3, status, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $insert_stmt->bind_param("iisssissssssssss", $student_id, $student_id, $company_name, $company_location, $position_title, $training_duration, $start_date, $end_date, $training_area, $skills_to_acquire, $motivation_letter, $preferred_company1, $preferred_company2, $preferred_company3, $status, $submitted_at);
             
             if ($insert_stmt->execute()) {
                 $success = ($action === 'submit') ? 'Application submitted successfully!' : 'Application saved as draft';

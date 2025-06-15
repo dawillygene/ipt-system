@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 14, 2025 at 09:15 PM
+-- Generation Time: Jun 15, 2025 at 03:44 PM
 -- Server version: 10.11.11-MariaDB-0+deb12u1
 -- PHP Version: 8.2.28
 
@@ -95,15 +95,29 @@ CREATE TABLE `applications` (
   `industrial` varchar(100) NOT NULL,
   `application_date` date NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `status` enum('pending','approved') NOT NULL DEFAULT 'pending'
+  `status` enum('draft','submitted','approved','rejected','in_review','pending') DEFAULT 'draft',
+  `company_name` varchar(255) DEFAULT NULL,
+  `company_location` varchar(255) DEFAULT NULL,
+  `position_title` varchar(255) DEFAULT NULL,
+  `training_duration` int(11) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `training_area` varchar(255) DEFAULT NULL,
+  `skills_to_acquire` text DEFAULT NULL,
+  `motivation_letter` text DEFAULT NULL,
+  `preferred_company1` varchar(255) DEFAULT NULL,
+  `preferred_company2` varchar(255) DEFAULT NULL,
+  `preferred_company3` varchar(255) DEFAULT NULL,
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `applications`
 --
 
-INSERT INTO `applications` (`id`, `user_id`, `student_id`, `full_name`, `phone`, `reg_number`, `department`, `industrial`, `application_date`, `created_at`, `status`) VALUES
-(14, 24, NULL, '0623641759', 'Lulu Ibrah', '12345678910', 'ICT', 'Sheria House,Airport,Bandarini', '2025-06-07', '2025-06-06 12:15:29', 'pending');
+INSERT INTO `applications` (`id`, `user_id`, `student_id`, `full_name`, `phone`, `reg_number`, `department`, `industrial`, `application_date`, `created_at`, `status`, `company_name`, `company_location`, `position_title`, `training_duration`, `start_date`, `end_date`, `training_area`, `skills_to_acquire`, `motivation_letter`, `preferred_company1`, `preferred_company2`, `preferred_company3`, `submitted_at`, `updated_at`) VALUES
+(14, 24, NULL, '0623641759', 'Lulu Ibrah', '12345678910', 'ICT', 'Sheria House,Airport,Bandarini', '2025-06-07', '2025-06-06 12:15:29', 'submitted', 'Sheria House,Airport,Bandarini', 'Unknown Location', 'Internship Position', 12, '2025-06-07', '2025-08-30', 'General', NULL, 'Migrated from old system', NULL, NULL, NULL, '2025-06-06 12:15:29', '2025-06-15 13:22:42');
 
 -- --------------------------------------------------------
 
@@ -533,7 +547,7 @@ INSERT INTO `students` (`student_id`, `user_id`, `full_name`, `reg_number`, `gen
 (5, NULL, 'Test Student', 'TEST123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'test@example.com', '2025-06-13 19:02:12', '2025-06-13 19:02:12', NULL, NULL, NULL, NULL),
 (6, NULL, 'Test Profile User', 'PROFILE123', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'testprofile@example.com', '2025-06-13 19:47:15', '2025-06-13 19:47:15', NULL, NULL, NULL, NULL),
 (7, NULL, 'HEAVENLIGHT MARIKI', 'venli1221', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'venlit@gmail.com', '2025-06-14 13:45:57', '2025-06-14 13:45:57', NULL, NULL, NULL, NULL),
-(8, NULL, 'HEAVENLIGHT ELIA MARIKI', 'student123', 'Female', 'DODOMA UNIVERSITY', 'Computer Science', 'SOFTWARE ENGINEEERING', 'Bachelor', 'LEVEL 7', 4, '255753225961', 'DODOMA TANZANIA', 'student@student.com', '2025-06-14 13:50:20', '2025-06-14 20:45:41', 'uploads/students/profile_8_1749933941.png', 'uploads/students/transcript_8_1749933900.pdf', 'uploads/students/id_8_1749933931.pdf', 'uploads/students/cv_8_1749933931.pdf');
+(8, NULL, 'HEAVENLIGHT ELIA MARIKI', 'student123', 'Female', 'DODOMA UNIVERSITY', 'Computer Science', 'SOFTWARE ENGINEEERING', 'Bachelor', 'LEVEL 7', 4, '255753225961', 'DODOMA TANZANIA', 'student@student.com', '2025-06-14 13:50:20', '2025-06-15 11:01:44', 'uploads/students/profile_8_1749933941.png', 'uploads/students/transcript_8_1749933900.pdf', 'uploads/students/id_8_1749933931.pdf', 'uploads/students/cv_8_1749933931.pdf');
 
 -- --------------------------------------------------------
 
